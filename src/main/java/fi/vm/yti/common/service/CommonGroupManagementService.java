@@ -1,0 +1,211 @@
+package fi.vm.yti.common.service;
+
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import fi.vm.yti.common.Constants;
+import fi.vm.yti.common.dto.GroupManagementOrganizationDTO;
+import fi.vm.yti.common.dto.GroupManagementUserDTO;
+import fi.vm.yti.common.dto.ResourceCommonDTO;
+import fi.vm.yti.common.mapper.MapperUtils;
+import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.common.repository.CommonRepository;
+
+import fi.vm.yti.security.YtiUser;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import java.time.ZonedDateTime;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import static fi.vm.yti.common.mapper.OrganizationMapper.*;
+
+@Service
+public class CommonGroupManagementService {
+    private static final Logger LOG = LoggerFactory.getLogger(CommonGroupManagementService.class);
+    private final CommonRepository coreRepository;
+
+    private final WebClient webClient;
+
+    @Value("${fake.login.allowed:false}")
+    private boolean fakeLoginAllowed;
+
+    private final Cache<String, GroupManagementUserDTO> userCache;
+
+    public CommonGroupManagementService(
+            @Qualifier("groupManagementClient") WebClient webClient,
+            CommonRepository coreRepository) {
+        this.webClient = webClient;
+        this.coreRepository = coreRepository;
+        userCache = CacheBuilder.newBuilder().build();
+    }
+
+    public void initOrganizations() {
+        var organizations = webClient.get().uri(builder -> builder
+                        .pathSegment("public-api", "organizations")
+                        .queryParam("onlyValid", "true")
+                        .build())
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<List<GroupManagementOrganizationDTO>>() {
+                })
+                .block();
+        if (organizations == null || organizations.isEmpty()) {
+            throw new GroupManagementException("No organizations found, is group management service down?");
+        }
+
+        var model = ModelFactory.createDefaultModel();
+        mapOrganizationsToModel(organizations, model);
+        coreRepository.put(Constants.ORGANIZATION_GRAPH, model);
+        LOG.info("Initialized organizations with {} organizations", organizations.size());
+    }
+
+    @Scheduled(cron = "0 */30 * * * *")
+    public void updateOrganizations() {
+        LOG.info("Updating organizations cache");
+        var organizations = webClient.get().uri(builder -> builder
+                        .pathSegment("public-api", "organizations")
+                        .queryParam("onlyValid", "true")
+                        .build())
+                .ifModifiedSince(ZonedDateTime.now().minusMinutes(30))
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<List<GroupManagementOrganizationDTO>>() {
+                })
+                .block();
+
+        if (organizations != null && !organizations.isEmpty()) {
+            var model = coreRepository.fetch(Constants.ORGANIZATION_GRAPH);
+            mapOrganizationsToModel(organizations, model);
+            coreRepository.put(Constants.ORGANIZATION_GRAPH, model);
+            coreRepository.invalidateOrganizationCache();
+            LOG.info("Updated {} organizations to fuseki", organizations.size());
+        } else {
+            LOG.info("No updates to organizations found");
+        }
+    }
+
+    public void initUsers() {
+        LOG.info("Initializing user cache");
+        var users = webClient.get()
+                .uri(builder -> builder
+                        .pathSegment("private-api", "users")
+                        .build())
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<List<GroupManagementUserDTO>>() {
+                })
+                .block();
+
+        if (users == null || users.isEmpty()) {
+            throw new GroupManagementException("No users found, is group service down?");
+        }
+
+        var map = users.stream().collect(Collectors.toMap(user -> user.getId().toString(), user -> user));
+        userCache.invalidateAll();
+        userCache.putAll(map);
+        LOG.info("Initialized user cache with {} users", map.size());
+    }
+
+    @Scheduled(cron = "0 */30 * * * *")
+    public void updateUsers() {
+        LOG.info("Updating user cache");
+        var users = webClient.get()
+                .uri(builder -> builder
+                        .pathSegment("private-api", "users")
+                        .build())
+                .ifModifiedSince(ZonedDateTime.now().minusMinutes(30))
+                .retrieve()
+                .bodyToMono(new ParameterizedTypeReference<List<GroupManagementUserDTO>>() {
+                })
+                .block();
+
+        if (users != null && !users.isEmpty()) {
+            var oldSize = userCache.size();
+            var map = users.stream().collect(Collectors.toMap(user -> user.getId().toString(), user -> user));
+            userCache.putAll(map);
+            LOG.info("Updated {} users to cache, old count: {}, new count: {}", map.size(), oldSize, userCache.size());
+        } else {
+            LOG.info("No modifications to users found");
+        }
+    }
+
+    public Consumer<ResourceCommonDTO> mapUser() {
+        return (var dto) -> {
+            if (dto.getCreator().getId() == null || dto.getModifier().getId() == null) {
+                return;
+            }
+            var creator = userCache.getIfPresent(dto.getCreator().getId());
+            var modifier = userCache.getIfPresent(dto.getModifier().getId());
+            if (creator != null) {
+                dto.getCreator().setName(creator.getFirstName() + " " + creator.getLastName());
+            } else {
+                dto.getCreator().setName("");
+            }
+
+            if (modifier != null) {
+                dto.getModifier().setName(modifier.getFirstName() + " " + modifier.getLastName());
+            } else {
+                dto.getModifier().setName("");
+            }
+        };
+    }
+
+    public List<UUID> getChildOrganizations(UUID orgId) {
+        var orgUrn = Constants.URN_UUID + orgId.toString();
+        if (!coreRepository.resourceExistsInGraph(Constants.ORGANIZATION_GRAPH, orgUrn)) {
+            LOG.warn("Organization not found {}", orgUrn);
+            return new ArrayList<>();
+        }
+        var model = coreRepository.getOrganizations();
+
+        var resource = model.getResource(orgUrn);
+
+        return MapperUtils.arrayPropertyToList(resource, SuomiMeta.parentOrganization).stream()
+                .map(MapperUtils::getUUID).toList();
+    }
+
+    public List<GroupManagementUserDTO> getFakeableUsers() {
+
+        if (fakeLoginAllowed) {
+            try {
+                return webClient.get().uri(builder -> builder
+                                .pathSegment("public-api", "users")
+                                .build())
+                        .retrieve()
+                        .bodyToMono(new ParameterizedTypeReference<List<GroupManagementUserDTO>>() {
+                        }).block();
+
+            } catch (Exception e) {
+                LOG.error(e.getMessage(), e);
+            }
+        }
+        return List.of();
+    }
+
+    public Set<UUID> getOrganizationsForUser(YtiUser user) {
+        final var rolesInOrganizations = user.getRolesInOrganizations();
+
+        var orgIds = new HashSet<>(rolesInOrganizations.keySet());
+
+        // show child organization's incomplete content for main organization users
+        var childOrganizationIds = orgIds.stream()
+                .map(this::getChildOrganizations)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+
+        orgIds.addAll(childOrganizationIds);
+        return orgIds;
+    }
+
+    private static final class GroupManagementException extends RuntimeException {
+        private GroupManagementException(String message) {
+            super(message);
+        }
+    }
+}

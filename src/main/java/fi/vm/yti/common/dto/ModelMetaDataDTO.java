@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public class ModelMetaData {
+public class ModelMetaDataDTO {
 
     private Map<String, String> label = Map.of();
     private Map<String, String> description = Map.of();

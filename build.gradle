@@ -67,6 +67,9 @@ dependencies {
     implementation "org.apache.jena:jena-rdfconnection:4.10.0"
     implementation "org.apache.jena:jena-querybuilder:4.10.0"
 
+    implementation "org.opensearch.client:opensearch-java:2.9.1"
+    implementation "org.opensearch.client:opensearch-rest-client:2.12.0"
+
     implementation "com.google.guava:guava:33.0.0-jre"
 
     implementation "fi.vm.yti:yti-spring-security:0.4.0"

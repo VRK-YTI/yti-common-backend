@@ -4,8 +4,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public class ModelMetaDataDTO {
+/**
+ * Base DTO class for storing graph (terminology or data model) metadata
+ */
+public class MetaDataDTO {
 
+    private String prefix;
     private Map<String, String> label = Map.of();
     private Map<String, String> description = Map.of();
     private Set<UUID> organizations = Set.of();
@@ -13,6 +17,14 @@ public class ModelMetaDataDTO {
     private String contact;
     private Map<String, String> documentation = Map.of();
     private Set<LinkDTO> links = Set.of();
+
+    public String getPrefix() {
+        return prefix;
+    }
+
+    public void setPrefix(String prefix) {
+        this.prefix = prefix;
+    }
 
     public Map<String, String> getLabel() {
         return label;

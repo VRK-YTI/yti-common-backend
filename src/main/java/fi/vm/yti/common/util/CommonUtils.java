@@ -9,7 +9,7 @@ public class CommonUtils {
         // Util class
     }
 
-     public static String encode(String param) {
+    public static String encode(String param) {
         return URLEncoder.encode(param, StandardCharsets.UTF_8);
     }
 

@@ -2,6 +2,7 @@ package fi.vm.yti.common.mapper;
 
 import fi.vm.yti.common.dto.ServiceCategoryDTO;
 import fi.vm.yti.common.exception.MappingError;
+import fi.vm.yti.common.util.MapperUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.sparql.vocabulary.FOAF;
 import org.apache.jena.vocabulary.RDF;

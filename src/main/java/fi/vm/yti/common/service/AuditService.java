@@ -1,4 +1,4 @@
-package fi.vm.yti.common.security;
+package fi.vm.yti.common.service;
 
 import fi.vm.yti.security.YtiUser;
 import org.slf4j.Logger;

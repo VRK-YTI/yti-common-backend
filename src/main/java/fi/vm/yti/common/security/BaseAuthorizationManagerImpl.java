@@ -14,7 +14,7 @@ import fi.vm.yti.security.YtiUser;
 
 import static fi.vm.yti.security.Role.ADMIN;
 import static fi.vm.yti.security.Role.DATA_MODEL_EDITOR;
-import static fi.vm.yti.security.Role.TERMINOLOGY_EDITOR;;
+import static fi.vm.yti.security.Role.TERMINOLOGY_EDITOR;
 
 public class BaseAuthorizationManagerImpl implements BaseAuthorizationManager {
 
@@ -39,6 +39,11 @@ public class BaseAuthorizationManagerImpl implements BaseAuthorizationManager {
     @Override
     public boolean isSuperUser() {
         return userProvider.getUser().isSuperuser();
+    }
+
+    @Override
+    public YtiUser getUser() {
+        return userProvider.getUser();
     }
 
     @Override

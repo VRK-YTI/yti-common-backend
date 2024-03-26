@@ -1,5 +1,6 @@
 package fi.vm.yti.common.security;
 
+import fi.vm.yti.security.YtiUser;
 import org.apache.jena.rdf.model.Model;
 
 import fi.vm.yti.security.Role;
@@ -20,4 +21,6 @@ public interface BaseAuthorizationManager {
     boolean isTerminologyEditorOfAnyOrganization(Collection<UUID> organizations);
 
     boolean isSuperUser();
+
+    YtiUser getUser();
 }

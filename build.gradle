@@ -6,7 +6,7 @@ plugins {
     id "pl.allegro.tech.build.axion-release" version "1.17.0"
 }
 
-project.version = "1.0.0-SNAPSHOT"
+project.version = scmVersion.version
 
 repositories {
     mavenLocal()
@@ -58,9 +58,9 @@ sourceCompatibility = 17
 targetCompatibility = 17
 
 dependencies {
-    implementation "org.springframework:spring-webflux:6.1.4"
-    implementation "org.springframework:spring-context:6.1.4"
-    implementation "org.springframework.security:spring-security-core:6.1.4"
+    implementation "org.springframework:spring-webflux:6.1.5"
+    implementation "org.springframework:spring-context:6.1.5"
+    implementation "org.springframework.security:spring-security-core:6.2.3"
     implementation "io.projectreactor.netty:reactor-netty-http:1.1.15"
     implementation "org.apache.jena:jena-core:4.10.0"
     implementation "org.apache.jena:jena-arq:4.10.0"

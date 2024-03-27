@@ -17,8 +17,6 @@ scmVersion {
 
 project.version = scmVersion.version
 
-println scmVersion.version
-
 repositories {
     mavenLocal()
     mavenCentral {

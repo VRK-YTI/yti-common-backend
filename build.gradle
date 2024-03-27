@@ -6,7 +6,18 @@ plugins {
     id "pl.allegro.tech.build.axion-release" version "1.17.0"
 }
 
+scmVersion {
+    versionIncrementer("incrementMinor")
+
+    tag {
+        prefix.set("v")
+        versionSeparator.set("")
+    }
+}
+
 project.version = scmVersion.version
+
+println scmVersion.version
 
 repositories {
     mavenLocal()
@@ -37,7 +48,7 @@ publishing {
         maven(MavenPublication) {
             groupId "fi.vm.yti"
             artifactId "yti-common-backend"
-            version project.version
+            version scmVersion.version
 
             artifact jar
         }

@@ -15,7 +15,6 @@ public class MetaDataInfoDTO extends ResourceCommonInfoDTO {
     private Set<OrganizationDTO> organizations = Set.of();
     private Set<ServiceCategoryDTO> groups = Set.of();
     private String contact;
-    private Map<String, String> documentation = Map.of();
     private Set<LinkDTO> links = Set.of();
 
     public String getPrefix() {
@@ -72,14 +71,6 @@ public class MetaDataInfoDTO extends ResourceCommonInfoDTO {
 
     public void setContact(String contact) {
         this.contact = contact;
-    }
-
-    public Map<String, String> getDocumentation() {
-        return documentation;
-    }
-
-    public void setDocumentation(Map<String, String> documentation) {
-        this.documentation = documentation;
     }
 
     public Set<LinkDTO> getLinks() {

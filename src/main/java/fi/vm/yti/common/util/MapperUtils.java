@@ -1,6 +1,5 @@
 package fi.vm.yti.common.util;
 
-import org.apache.jena.datatypes.xsd.XSDDatatype;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
@@ -8,10 +7,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.shared.JenaException;
 import org.apache.jena.vocabulary.DCTerms;
-import org.apache.jena.vocabulary.RDFS;
-import org.apache.jena.vocabulary.SKOS;
 
-import fi.vm.yti.common.dto.BaseDTO;
 import fi.vm.yti.common.dto.ResourceCommonInfoDTO;
 import fi.vm.yti.common.dto.UserDTO;
 import fi.vm.yti.common.exception.MappingError;
@@ -199,17 +195,4 @@ public class MapperUtils {
         }
     }
 
-    public static Resource addCommonResourceInfo(Model model, GraphURI uri, BaseDTO dto) {
-        var modelResource = model.getResource(uri.getModelResourceURI());
-        var languages = MapperUtils.arrayPropertyToSet(modelResource, DCTerms.language);
-        var status = MapperUtils.propertyToString(modelResource, SuomiMeta.publicationStatus);
-
-        var resource = model.createResource(uri.getResourceURI())
-                .addProperty(SuomiMeta.publicationStatus, ResourceFactory.createResource(status))
-                .addProperty(RDFS.isDefinedBy, modelResource)
-                .addProperty(DCTerms.identifier, ResourceFactory.createTypedLiteral(dto.getIdentifier(), XSDDatatype.XSDNCName));
-        MapperUtils.addLocalizedProperty(languages, dto.getLabel(), resource, RDFS.label, model);
-        MapperUtils.addOptionalStringProperty(resource, SKOS.editorialNote, dto.getEditorialNote());
-        return resource;
-    }
 }

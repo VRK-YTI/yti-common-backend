@@ -12,6 +12,7 @@ public class MetaDataDTO {
     private String prefix;
     private Map<String, String> label = Map.of();
     private Map<String, String> description = Map.of();
+    private Set<String> languages = Set.of();
     private Set<UUID> organizations = Set.of();
     private Set<String> groups = Set.of();
     private String contact;
@@ -40,6 +41,14 @@ public class MetaDataDTO {
 
     public void setDescription(Map<String, String> description) {
         this.description = description;
+    }
+
+    public Set<String> getLanguages() {
+        return languages;
+    }
+
+    public void setLanguages(Set<String> languages) {
+        this.languages = languages;
     }
 
     public Set<UUID> getOrganizations() {

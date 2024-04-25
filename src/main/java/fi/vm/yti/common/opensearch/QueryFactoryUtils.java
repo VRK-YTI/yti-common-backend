@@ -7,7 +7,7 @@ import org.opensearch.client.opensearch._types.SortOrder;
 import org.opensearch.client.opensearch._types.mapping.FieldType;
 import org.opensearch.client.opensearch._types.query_dsl.*;
 
-import fi.vm.yti.common.dto.Status;
+import fi.vm.yti.common.enums.Status;
 
 import java.util.Collection;
 

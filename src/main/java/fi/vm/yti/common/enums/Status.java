@@ -1,4 +1,4 @@
-package fi.vm.yti.common.dto;
+package fi.vm.yti.common.enums;
 
 public enum Status {
     DRAFT,

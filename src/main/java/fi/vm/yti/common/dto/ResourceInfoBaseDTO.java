@@ -1,5 +1,7 @@
 package fi.vm.yti.common.dto;
 
+import fi.vm.yti.common.enums.Status;
+
 import java.util.Set;
 
 public class ResourceInfoBaseDTO extends ResourceCommonInfoDTO {

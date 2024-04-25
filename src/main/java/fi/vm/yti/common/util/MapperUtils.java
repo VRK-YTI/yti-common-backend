@@ -121,11 +121,16 @@ public class MapperUtils {
     /**
      * Add localized property to Jena model
      *
+     * @deprecated prefer simplified addLocalizedProperty(Set<String> languages,
+     *                                             Map<String, String> data,
+     *                                             Resource resource,
+     *                                             Property property)
      * @param data     Map of (language, value)
      * @param resource Resource to add to
      * @param property Property to add
      * @param model    Jena model to add to
      */
+    @Deprecated(since = "0.2.0")
     public static void addLocalizedProperty(Set<String> languages,
                                             Map<String, String> data,
                                             Resource resource,
@@ -140,6 +145,21 @@ public class MapperUtils {
                 throw new MappingError("Model missing language for localized property {" + lang + "}");
             }
             resource.addProperty(property, model.createLiteral(value, lang));
+        });
+    }
+
+    public static void addLocalizedProperty(Set<String> languages,
+                                            Map<String, String> data,
+                                            Resource resource,
+                                            Property property) {
+        if (data == null || languages == null || languages.isEmpty()) {
+            return;
+        }
+        data.forEach((lang, value) -> {
+            if (!languages.contains(lang)) {
+                throw new MappingError("Model missing language for localized property {" + lang + "}");
+            }
+            resource.addProperty(property, ResourceFactory.createLangLiteral(value, lang));
         });
     }
 

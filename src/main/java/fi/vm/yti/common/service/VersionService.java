@@ -22,8 +22,7 @@ public class VersionService {
 
     public int getVersionNumber() {
         var versionModel = commonRepository.fetch(versionGraph);
-        var version = versionModel.getResource(versionGraph).getRequiredProperty(OWL.versionInfo).getInt();
-        return version;
+        return versionModel.getResource(versionGraph).getRequiredProperty(OWL.versionInfo).getInt();
     }
 
     public void setVersionNumber(int version) {
@@ -33,7 +32,6 @@ public class VersionService {
     }
 
     public boolean isVersionGraphInitialized() {
-        var exists = commonRepository.graphExists(versionGraph);
-        return exists;
+        return commonRepository.graphExists(versionGraph);
     }
 }

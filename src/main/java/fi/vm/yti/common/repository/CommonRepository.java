@@ -28,7 +28,7 @@ public class CommonRepository extends BaseRepository {
     private final Cache<String, Model> modelCache;
 
     public CommonRepository(@Value(("${fuseki.url}")) String endpoint,
-                            @Value("${model.cache.expiration:1800}") Long cacheExpireTime) {
+                            @Value("${fuseki.cache.common.expiration:1800}") Long cacheExpireTime) {
         super(RDFConnection.connect(endpoint + "/core/get"),
                 RDFConnection.connect(endpoint + "/core/data"),
                 RDFConnection.connect(endpoint + "/core/sparql"),
@@ -52,7 +52,7 @@ public class CommonRepository extends BaseRepository {
             return organizations;
         }
 
-        organizations = fetch("urn:yti:organizations");
+        organizations = fetch(Constants.ORGANIZATION_GRAPH);
         logger.info("Fetched organizations from fuseki to cache");
         modelCache.put("organizations", organizations);
         return organizations;

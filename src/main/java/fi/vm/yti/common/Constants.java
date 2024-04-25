@@ -6,7 +6,7 @@ import java.util.Map;
 public class Constants {
 
     private Constants(){
-        //utility class
+        // utility class
     }
     public static final String URN_UUID = "urn:uuid:";
     public static final String RESOURCE_SEPARATOR = "/";

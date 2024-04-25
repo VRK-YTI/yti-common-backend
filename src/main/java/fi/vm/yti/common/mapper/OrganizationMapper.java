@@ -4,6 +4,7 @@ import fi.vm.yti.common.dto.GroupManagementOrganizationDTO;
 import fi.vm.yti.common.dto.OrganizationDTO;
 import fi.vm.yti.common.exception.MappingError;
 import fi.vm.yti.common.properties.SuomiMeta;
+import fi.vm.yti.common.util.MapperUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -18,7 +19,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static fi.vm.yti.common.Constants.*;
-import static fi.vm.yti.common.mapper.MapperUtils.*;
+import static fi.vm.yti.common.util.MapperUtils.*;
 
 public class OrganizationMapper {
 

@@ -5,8 +5,8 @@ import com.google.common.cache.CacheBuilder;
 import fi.vm.yti.common.Constants;
 import fi.vm.yti.common.dto.GroupManagementOrganizationDTO;
 import fi.vm.yti.common.dto.GroupManagementUserDTO;
-import fi.vm.yti.common.dto.ResourceCommonDTO;
-import fi.vm.yti.common.mapper.MapperUtils;
+import fi.vm.yti.common.dto.ResourceCommonInfoDTO;
+import fi.vm.yti.common.util.MapperUtils;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.repository.CommonRepository;
 
@@ -23,14 +23,16 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.ZonedDateTime;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static fi.vm.yti.common.mapper.OrganizationMapper.*;
 
 @Service
-public class CommonGroupManagementService {
-    private static final Logger LOG = LoggerFactory.getLogger(CommonGroupManagementService.class);
+public class GroupManagementService {
+    private static final Logger LOG = LoggerFactory.getLogger(GroupManagementService.class);
+
     private final CommonRepository coreRepository;
 
     private final WebClient webClient;
@@ -40,7 +42,11 @@ public class CommonGroupManagementService {
 
     private final Cache<String, GroupManagementUserDTO> userCache;
 
-    public CommonGroupManagementService(
+    private static final String PUBLIC_API = "public-api";
+
+    private static final String PRIVATE_API = "private-api";
+
+    public GroupManagementService(
             @Qualifier("groupManagementClient") WebClient webClient,
             CommonRepository coreRepository) {
         this.webClient = webClient;
@@ -49,14 +55,7 @@ public class CommonGroupManagementService {
     }
 
     public void initOrganizations() {
-        var organizations = webClient.get().uri(builder -> builder
-                        .pathSegment("public-api", "organizations")
-                        .queryParam("onlyValid", "true")
-                        .build())
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<GroupManagementOrganizationDTO>>() {
-                })
-                .block();
+        var organizations = fetchOrganizations(true);
         if (organizations == null || organizations.isEmpty()) {
             throw new GroupManagementException("No organizations found, is group management service down?");
         }
@@ -67,18 +66,10 @@ public class CommonGroupManagementService {
         LOG.info("Initialized organizations with {} organizations", organizations.size());
     }
 
-    @Scheduled(cron = "0 */30 * * * *")
+    @Scheduled(fixedRateString = "${groupmanagement.syncInterval.organizations:30}", timeUnit = TimeUnit.MINUTES)
     public void updateOrganizations() {
         LOG.info("Updating organizations cache");
-        var organizations = webClient.get().uri(builder -> builder
-                        .pathSegment("public-api", "organizations")
-                        .queryParam("onlyValid", "true")
-                        .build())
-                .ifModifiedSince(ZonedDateTime.now().minusMinutes(30))
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<GroupManagementOrganizationDTO>>() {
-                })
-                .block();
+        var organizations = fetchOrganizations(false);
 
         if (organizations != null && !organizations.isEmpty()) {
             var model = coreRepository.fetch(Constants.ORGANIZATION_GRAPH);
@@ -93,14 +84,7 @@ public class CommonGroupManagementService {
 
     public void initUsers() {
         LOG.info("Initializing user cache");
-        var users = webClient.get()
-                .uri(builder -> builder
-                        .pathSegment("private-api", "users")
-                        .build())
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<GroupManagementUserDTO>>() {
-                })
-                .block();
+        var users = fetchUsers(false, true);
 
         if (users == null || users.isEmpty()) {
             throw new GroupManagementException("No users found, is group service down?");
@@ -112,18 +96,10 @@ public class CommonGroupManagementService {
         LOG.info("Initialized user cache with {} users", map.size());
     }
 
-    @Scheduled(cron = "0 */30 * * * *")
+    @Scheduled(fixedRateString = "${groupmanagement.syncInterval.users:30}", timeUnit = TimeUnit.MINUTES)
     public void updateUsers() {
         LOG.info("Updating user cache");
-        var users = webClient.get()
-                .uri(builder -> builder
-                        .pathSegment("private-api", "users")
-                        .build())
-                .ifModifiedSince(ZonedDateTime.now().minusMinutes(30))
-                .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<GroupManagementUserDTO>>() {
-                })
-                .block();
+        var users = fetchUsers(false, false);
 
         if (users != null && !users.isEmpty()) {
             var oldSize = userCache.size();
@@ -135,7 +111,7 @@ public class CommonGroupManagementService {
         }
     }
 
-    public Consumer<ResourceCommonDTO> mapUser() {
+    public Consumer<ResourceCommonInfoDTO> mapUser() {
         return (var dto) -> {
             if (dto.getCreator().getId() == null || dto.getModifier().getId() == null) {
                 return;
@@ -171,19 +147,8 @@ public class CommonGroupManagementService {
     }
 
     public List<GroupManagementUserDTO> getFakeableUsers() {
-
         if (fakeLoginAllowed) {
-            try {
-                return webClient.get().uri(builder -> builder
-                                .pathSegment("public-api", "users")
-                                .build())
-                        .retrieve()
-                        .bodyToMono(new ParameterizedTypeReference<List<GroupManagementUserDTO>>() {
-                        }).block();
-
-            } catch (Exception e) {
-                LOG.error(e.getMessage(), e);
-            }
+            return fetchUsers(true, false);
         }
         return List.of();
     }
@@ -201,6 +166,39 @@ public class CommonGroupManagementService {
 
         orgIds.addAll(childOrganizationIds);
         return orgIds;
+    }
+
+    private List<GroupManagementUserDTO> fetchUsers(boolean publicUsers, boolean init) {
+        String apiPath = publicUsers ? PUBLIC_API : PRIVATE_API;
+
+        var client = webClient.get()
+                .uri(builder -> builder
+                        .pathSegment(apiPath, "users")
+                        .build());
+        if (!init) {
+            client.ifModifiedSince(ZonedDateTime.now().minusMinutes(30));
+        }
+
+        return client.retrieve()
+                .bodyToMono(new ParameterizedTypeReference<List<GroupManagementUserDTO>>() {
+                })
+                .block();
+    }
+
+    private List<GroupManagementOrganizationDTO> fetchOrganizations(boolean init) {
+        var client = webClient.get().uri(builder -> builder
+                .pathSegment(PUBLIC_API, "organizations")
+                .queryParam("onlyValid", "true")
+                .build());
+
+        if (!init) {
+            client.ifModifiedSince(ZonedDateTime.now().minusMinutes(30));
+        }
+
+        return client.retrieve()
+                .bodyToMono(new ParameterizedTypeReference<List<GroupManagementOrganizationDTO>>() {
+                })
+                .block();
     }
 
     private static final class GroupManagementException extends RuntimeException {

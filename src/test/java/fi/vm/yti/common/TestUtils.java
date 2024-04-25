@@ -18,10 +18,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class MapperTestUtils {
+public class TestUtils {
     public static Model getModelFromFile(String filepath) {
         var m = ModelFactory.createDefaultModel();
-        var stream = MapperTestUtils.class.getResourceAsStream(filepath);
+        var stream = TestUtils.class.getResourceAsStream(filepath);
         assertNotNull(stream);
         RDFDataMgr.read(m, stream, RDFLanguages.TURTLE);
         return m;

@@ -1,7 +1,7 @@
 package fi.vm.yti.common.service;
 
 import fi.vm.yti.common.Constants;
-import fi.vm.yti.common.MapperTestUtils;
+import fi.vm.yti.common.TestUtils;
 import fi.vm.yti.common.dto.GroupManagementUserDTO;
 import fi.vm.yti.common.dto.ResourceInfoBaseDTO;
 import fi.vm.yti.common.dto.UserDTO;
@@ -66,7 +66,7 @@ class GroupManagementServiceTest {
                 "Modifier",
                 null);
 
-        MapperTestUtils.mockWebClient(client, List.of(creatorResult, modifierResult));
+        TestUtils.mockWebClient(client, List.of(creatorResult, modifierResult));
 
         groupManagementService.initUsers();
         groupManagementService.mapUser().accept(common);

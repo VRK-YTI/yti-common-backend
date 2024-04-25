@@ -1,6 +1,6 @@
 package fi.vm.yti.common.mapper;
 
-import fi.vm.yti.common.MapperTestUtils;
+import fi.vm.yti.common.TestUtils;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -9,7 +9,7 @@ class ServiceCategoryMapperTest {
 
     @Test
     void testMapServiceCategoriesToDTO() {
-        var model = MapperTestUtils.getModelFromFile("/service-categories.ttl");
+        var model = TestUtils.getModelFromFile("/service-categories.ttl");
         var serviceCategories = ServiceCategoryMapper.mapToListServiceCategoryDTO(model);
 
         assertEquals(3, serviceCategories.size());

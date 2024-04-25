@@ -1,7 +1,7 @@
 package fi.vm.yti.common.mapper;
 
 import fi.vm.yti.common.Constants;
-import fi.vm.yti.common.MapperTestUtils;
+import fi.vm.yti.common.TestUtils;
 import fi.vm.yti.common.dto.GroupManagementOrganizationDTO;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.util.MapperUtils;
@@ -23,7 +23,7 @@ class OrganizationMapperTest {
 
     @Test
     void testMapOrganizationsToDTO() {
-        var model = MapperTestUtils.getModelFromFile("/organizations.ttl");
+        var model = TestUtils.getModelFromFile("/organizations.ttl");
         var organizations = OrganizationMapper.mapToListOrganizationDTO(model);
 
         assertEquals(3, organizations.size());

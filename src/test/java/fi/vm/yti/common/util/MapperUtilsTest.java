@@ -39,19 +39,19 @@ class MapperUtilsTest {
         var resource = model.createResource("http://test-resource");
         var languages = Set.of("fi", "en");
 
-        MapperUtils.addLocalizedProperty(languages, Map.of("fi", "test"), resource, RDFS.label, model);
+        MapperUtils.addLocalizedProperty(languages, Map.of("fi", "test"), resource, RDFS.label);
 
         var label = resource.getProperty(RDFS.label);
         assertEquals("fi", label.getLanguage());
         assertEquals("test", label.getString());
 
-        MapperUtils.addLocalizedProperty(languages, null, resource, RDFS.comment, model);
-        MapperUtils.addLocalizedProperty(languages, Map.of(), resource, RDFS.comment, model);
+        MapperUtils.addLocalizedProperty(languages, null, resource, RDFS.comment);
+        MapperUtils.addLocalizedProperty(languages, Map.of(), resource, RDFS.comment);
         assertFalse(resource.hasProperty(RDFS.comment));
 
         var invalidLanguages = Map.of("fr", "test");
         assertThrows(MappingError.class, () ->
-            MapperUtils.addLocalizedProperty(languages, invalidLanguages, resource, RDFS.label, model)
+            MapperUtils.addLocalizedProperty(languages, invalidLanguages, resource, RDFS.label)
         );
     }
 

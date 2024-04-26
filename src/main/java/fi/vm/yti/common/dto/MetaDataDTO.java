@@ -1,6 +1,5 @@
 package fi.vm.yti.common.dto;
 
-import fi.vm.yti.common.enums.GraphType;
 import fi.vm.yti.common.enums.Status;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -16,7 +15,6 @@ public class MetaDataDTO {
     private String prefix;
     private Map<String, String> label = Map.of();
     private Map<String, String> description = Map.of();
-    private GraphType graphType;
     private Set<String> languages = Set.of();
     private Status status;
     private Set<UUID> organizations = Set.of();
@@ -45,14 +43,6 @@ public class MetaDataDTO {
 
     public void setDescription(Map<String, String> description) {
         this.description = description;
-    }
-
-    public GraphType getGraphType() {
-        return graphType;
-    }
-
-    public void setGraphType(GraphType graphType) {
-        this.graphType = graphType;
     }
 
     public Set<String> getLanguages() {

@@ -1,6 +1,7 @@
 package fi.vm.yti.common.opensearch;
 
 import java.io.ByteArrayOutputStream;
+import java.util.List;
 import java.util.Map;
 
 import org.opensearch.client.json.JsonpMapper;
@@ -67,5 +68,27 @@ public class OpenSearchUtil {
     public static Property getDateProperty() {
         return new Property.Builder()
                 .date(new DateProperty.Builder().build()).build();
+    }
+
+    public static Map<String, Property> getMetaDataProperties() {
+        return Map.ofEntries(
+                Map.entry("id", getKeywordProperty()),
+                Map.entry("uri", getKeywordProperty()),
+                Map.entry("status", getKeywordProperty()),
+                Map.entry("type", getKeywordProperty()),
+                Map.entry("prefix", getKeywordProperty()),
+                Map.entry("organizations", getKeywordProperty()),
+                Map.entry("languages", getKeywordProperty()),
+                Map.entry("groups", getKeywordProperty()),
+                Map.entry("created", getDateProperty()),
+                Map.entry("contentModified", getDateProperty())
+        );
+    }
+
+    public static List<Map<String, DynamicTemplate>> getMetaDataDynamicTemplates() {
+        return List.of(
+                getDynamicTemplate("label", "label.*"),
+                getDynamicTemplate("description", "description.*")
+        );
     }
 }

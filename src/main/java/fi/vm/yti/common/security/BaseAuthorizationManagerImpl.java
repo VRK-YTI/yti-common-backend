@@ -63,6 +63,9 @@ public class BaseAuthorizationManagerImpl implements BaseAuthorizationManager {
 
     @Override
     public boolean hasRightToAnyOrganization(Collection<UUID> organizations, Role...roles) {
+        if (organizations.isEmpty()) {
+            return false;
+        }
         YtiUser user = userProvider.getUser();
         return user.isSuperuser() || user.isInAnyRole(EnumSet.of(ADMIN, roles), organizations);
     }

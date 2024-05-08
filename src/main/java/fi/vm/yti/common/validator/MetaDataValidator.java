@@ -35,14 +35,10 @@ public abstract class MetaDataValidator<R extends BaseRepository> extends BaseVa
         // invalid prefix might cause an internal server error in sparql query
         var isPrefixValid = checkPrefix(context, prefix, prefixPropertyLabel, update);
 
-        if (isPrefixValid) {
+        if (isPrefixValid && !update) {
             boolean exist = repository.graphExists(getNamespacePrefix() + prefix + Constants.RESOURCE_SEPARATOR);
-            if (exist && !update) {
-                // if creating new check that prefix is free
+            if (exist) {
                 addConstraintViolation(context, "prefix-in-use", prefixPropertyLabel);
-            } else if (!exist && update) {
-                // if updating check that graph exists
-                addConstraintViolation(context, "graph-not-found", prefixPropertyLabel);
             }
         }
     }

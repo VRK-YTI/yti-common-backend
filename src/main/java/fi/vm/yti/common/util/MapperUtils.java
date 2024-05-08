@@ -126,7 +126,7 @@ public class MapperUtils {
      * @param data     Map of (language, value)
      * @param resource Resource to add to
      * @param property Property to add
-    */
+     */
     public static void addLocalizedProperty(Set<String> languages,
                                             Map<String, String> data,
                                             Resource resource,
@@ -162,6 +162,24 @@ public class MapperUtils {
         }
     }
 
+    public static <T> T getLiteral(Resource resource, Property property, Class<T> type) {
+        var prop = resource.getProperty(property);
+        if (prop == null) {
+            return null;
+        }
+        var literal = prop.getLiteral();
+
+        if (type.equals(Integer.class)) {
+            return type.cast(literal.getInt());
+        } else if (type.equals(Boolean.class)) {
+            return type.cast(literal.getBoolean());
+        } else if (type.equals(Double.class)) {
+            return type.cast(literal.getDouble());
+        } else if (type.equals(String.class)) {
+            return type.cast(literal.getString());
+        }
+        return null;
+    }
 
     public static void addCreationMetadata(Resource resource, YtiUser user) {
         var creationDate = new XSDDateTime(Calendar.getInstance());
@@ -211,13 +229,6 @@ public class MapperUtils {
             addLocalizedProperty(languages, data, resource, property);
         }
     }
-
-    /**
-     * Checks if the type property (RDF:type) of the resource is particular type
-     * @param resource Resource to check
-     * @param type Type to check
-     * @return if resource has given type
-     */
 
     /**
      * Update string property

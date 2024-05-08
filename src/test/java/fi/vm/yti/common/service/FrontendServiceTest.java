@@ -1,6 +1,6 @@
 package fi.vm.yti.common.service;
 
-import fi.vm.yti.common.MapperTestUtils;
+import fi.vm.yti.common.TestUtils;
 import fi.vm.yti.common.repository.CommonRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,7 +30,7 @@ class FrontendServiceTest {
 
     @Test
     void testOrganizations() {
-        var model = MapperTestUtils.getModelFromFile("/organizations.ttl");
+        var model = TestUtils.getModelFromFile("/organizations.ttl");
         String sortLanguage = "en";
 
         when(coreRepository.getOrganizations()).thenReturn(model);
@@ -46,7 +46,7 @@ class FrontendServiceTest {
 
     @Test
     void testOrganizationsWithChildren() {
-        var model = MapperTestUtils.getModelFromFile("/organizations.ttl");
+        var model = TestUtils.getModelFromFile("/organizations.ttl");
         String sortLanguage = "en";
 
         when(coreRepository.getOrganizations()).thenReturn(model);
@@ -59,7 +59,7 @@ class FrontendServiceTest {
 
     @Test
     void testServiceCategories() {
-        var model = MapperTestUtils.getModelFromFile("/service-categories.ttl");
+        var model = TestUtils.getModelFromFile("/service-categories.ttl");
         String sortLanguage = "en";
 
         when(coreRepository.getServiceCategories()).thenReturn(model);

@@ -3,7 +3,7 @@ package fi.vm.yti.common.opensearch;
 import java.util.List;
 import java.util.Map;
 
-import fi.vm.yti.common.dto.Status;
+import fi.vm.yti.common.enums.Status;
 
 public abstract class IndexBase {
     private String id;

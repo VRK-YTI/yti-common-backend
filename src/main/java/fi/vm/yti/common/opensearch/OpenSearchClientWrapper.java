@@ -58,7 +58,7 @@ public class OpenSearchClientWrapper {
     /**
      * Delete an index if it exists.
      *
-     * @param index index name
+     * @param indexes index name
      * @throws IOException in case there is a problem sending the request or parsing back the response
      */
     public void cleanIndexes(String... indexes) throws IOException {
@@ -86,10 +86,8 @@ public class OpenSearchClientWrapper {
         }
     }
 
-    public <T extends IndexBase> void putToIndex(String index,
-                                String id,
-                                T doc) {
-        String encId = CommonUtils.encode(id);
+    public <T extends IndexBase> void putToIndex(String index, T doc) {
+        String encId = CommonUtils.encode(doc.getId());
         try {
             IndexRequest<T> indexReq = new IndexRequest.Builder<T>()
                     .index(index)
@@ -100,16 +98,14 @@ public class OpenSearchClientWrapper {
 
             logPayload(indexReq, index);
             client.index(indexReq);
-            logger.debug("Indexed {} to {}}", id, index);
+            logger.debug("Indexed {} to {}}", doc.getId(), index);
         } catch (IOException | OpenSearchException e) {
-            logger.warn("Could not add to index: " + id, e);
+            logger.warn("Could not add to index: " + doc.getId(), e);
         }
     }
 
-    public <T> void updateToIndex(String index,
-                                    String id,
-                                    T doc) {
-        String encId = CommonUtils.encode(id);
+    public <T extends IndexBase> void updateToIndex(String index, T doc) {
+        String encId = CommonUtils.encode(doc.getId());
         try {
             var request = new UpdateRequest.Builder<String, T>()
                     .index(index)
@@ -119,9 +115,9 @@ public class OpenSearchClientWrapper {
                     .build();
             logPayload(request, index);
             client.update(request, String.class);
-            logger.debug("Updated {} to {}", id, index);
+            logger.debug("Updated {} to {}", doc.getId(), index);
         } catch (IOException | OpenSearchException e) {
-            logger.warn("Could not update to index: " + id, e);
+            logger.warn("Could not update to index: " + doc.getId(), e);
         }
     }
 

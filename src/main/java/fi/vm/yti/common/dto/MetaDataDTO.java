@@ -1,5 +1,8 @@
 package fi.vm.yti.common.dto;
 
+import fi.vm.yti.common.enums.Status;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -13,11 +16,10 @@ public class MetaDataDTO {
     private Map<String, String> label = Map.of();
     private Map<String, String> description = Map.of();
     private Set<String> languages = Set.of();
+    private Status status;
     private Set<UUID> organizations = Set.of();
     private Set<String> groups = Set.of();
     private String contact;
-    private Map<String, String> documentation = Map.of();
-    private Set<LinkDTO> links = Set.of();
 
     public String getPrefix() {
         return prefix;
@@ -51,6 +53,14 @@ public class MetaDataDTO {
         this.languages = languages;
     }
 
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
     public Set<UUID> getOrganizations() {
         return organizations;
     }
@@ -75,19 +85,8 @@ public class MetaDataDTO {
         this.contact = contact;
     }
 
-    public Map<String, String> getDocumentation() {
-        return documentation;
-    }
-
-    public void setDocumentation(Map<String, String> documentation) {
-        this.documentation = documentation;
-    }
-
-    public Set<LinkDTO> getLinks() {
-        return links;
-    }
-
-    public void setLinks(Set<LinkDTO> links) {
-        this.links = links;
+    @Override
+    public String toString() {
+        return ToStringBuilder.reflectionToString(this);
     }
 }

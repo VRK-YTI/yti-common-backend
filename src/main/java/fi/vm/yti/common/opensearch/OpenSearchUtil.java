@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.json.stream.JsonGenerator;
 import org.opensearch.client.json.JsonpMapper;
 import org.opensearch.client.json.JsonpSerializable;
 import org.opensearch.client.json.jackson.JacksonJsonpMapper;
@@ -36,6 +37,19 @@ public class OpenSearchUtil {
             LOG.debug("Payload for object of type {} in index {}", object.getClass().getSimpleName(), index);
             LOG.debug(out.toString());
         }
+    }
+
+    /**
+     * Serialize object to JSON
+     * @param object object to serialize
+     * @return object as JSON string
+     */
+    public static String getPayload(JsonpSerializable object) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        JsonGenerator generator = MAPPER.jsonProvider().createGenerator(out);
+        MAPPER.serialize(object, generator);
+        generator.close();
+        return out.toString();
     }
 
 

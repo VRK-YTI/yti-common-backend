@@ -2,13 +2,19 @@ package fi.vm.yti.common.util;
 
 import fi.vm.yti.common.exception.MappingError;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.RDFS;
+import org.apache.jena.vocabulary.SKOS;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -75,5 +81,66 @@ class MapperUtilsTest {
 
         assertTrue(List.of("sub-class-1", "sub-class-2", "sub-class-3")
                 .containsAll(MapperUtils.arrayPropertyToList(resource, RDFS.subClassOf)));
+    }
+
+    @Test
+    void testRDFLists() {
+        var model = ModelFactory.createDefaultModel();
+        var resource = model.createResource("https://test-resource");
+
+        MapperUtils.addListProperty(resource, DCTerms.source, Stream.of("Source 1", "Source 2")
+                .map(ResourceFactory::createStringLiteral)
+                .toList());
+
+        assertTrue(resource.hasProperty(DCTerms.source));
+        var list = MapperUtils.getList(resource, DCTerms.source)
+                .asJavaList().stream()
+                .map(s -> s.asLiteral().getString())
+                .toList();
+
+        assertEquals(List.of("Source 1", "Source 2"), list);
+
+        MapperUtils.addListProperty(resource, DCTerms.source, Stream.of("New source 1", "New source 2")
+                .map(ResourceFactory::createStringLiteral)
+                .toList());
+
+        var updatedList = MapperUtils.getList(resource, DCTerms.source)
+                .asJavaList().stream()
+                .map(s -> s.asLiteral().getString())
+                .toList();
+
+        assertEquals(List.of("New source 1", "New source 2"), updatedList);
+
+        MapperUtils.addListProperty(resource, DCTerms.source, List.of());
+
+        assertThrows(MappingError.class, () -> MapperUtils.getList(resource, DCTerms.source));
+        assertEquals(0, MapperUtils.getResourceList(resource, DCTerms.source).size());
+        assertEquals(0, model.size());
+    }
+
+    @Test
+    void testRDFListsWithResource() {
+        var model = ModelFactory.createDefaultModel();
+        var resource = model.createResource("https://test-resource");
+
+        // create list property
+        MapperUtils.addListProperty(resource, SKOS.altLabel, List.of(
+                model.createResource().addProperty(RDFS.label, "Anonymous resource 1")));
+
+        var list = MapperUtils.getResourceList(resource, SKOS.altLabel);
+        assertEquals("Anonymous resource 1", MapperUtils.propertyToString(list.get(0), RDFS.label));
+
+        // update list
+        MapperUtils.addListProperty(resource, SKOS.altLabel, List.of(
+                model.createResource().addProperty(RDFS.label, "Anonymous resource 2")));
+
+        list = MapperUtils.getResourceList(resource, SKOS.altLabel);
+        assertEquals("Anonymous resource 2", MapperUtils.propertyToString(list.get(0), RDFS.label));
+
+        // remove list
+        MapperUtils.addListProperty(resource, SKOS.altLabel, List.of());
+
+        RDFDataMgr.write(System.out, model, Lang.TURTLE);
+        assertEquals(0, model.size());
     }
 }

@@ -7,9 +7,7 @@ import fi.vm.yti.common.exception.MappingError;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.shared.JenaException;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
@@ -304,5 +302,60 @@ public class MapperUtils {
             throw new MappingError("Could not get status from uri");
         }
         return Status.valueOf(uri.substring(uri.lastIndexOf("/") + 1));
+    }
+
+    public static <T extends RDFNode> void addListProperty(Resource resource, Property property, List<T> values) {
+        if (resource.hasProperty(property)) {
+            var obj = resource.getProperty(property).getObject();
+            if (obj != null && obj.canAs(RDFList.class)) {
+                var list = resource.getModel().getList(obj.asResource());
+                var iterator = list.iterator();
+
+                while (iterator.hasNext()) {
+                    var i = iterator.next();
+                    if (i.isResource()) {
+                        resource.getModel().removeAll(i.asResource(), null, null);
+                    }
+                }
+                list.removeList();
+                resource.removeAll(property);
+            }
+        }
+
+        if (values.isEmpty()) {
+            return;
+        }
+
+        var newList = resource.getModel().createList(values.iterator());
+        resource.addProperty(property, newList);
+    }
+
+    public static RDFList getList(Resource resource, Property property) {
+        if (resource.hasProperty(property)) {
+            var obj = resource.getProperty(property).getObject();
+            if (!obj.canAs(RDFList.class)) {
+                throw new MappingError(String.format("Property %s in resource %s is not RDFList",
+                        property, resource));
+            }
+            return resource.getModel().getList(obj.asResource());
+        }
+
+        throw new MappingError(String.format("Creating RDFList failed. Property %s missing in resource %s",
+                property, resource));
+    }
+
+    public static List<Resource> getResourceList(Resource resource, Property property) {
+        if (resource.hasProperty(property)) {
+            var obj = resource.getProperty(property).getObject();
+            if (!obj.canAs(RDFList.class)) {
+               return new ArrayList<>();
+            }
+            return resource.getModel().getList(obj.asResource())
+                    .asJavaList()
+                    .stream()
+                    .map(RDFNode::asResource)
+                    .toList();
+        }
+        return new ArrayList<>();
     }
 }

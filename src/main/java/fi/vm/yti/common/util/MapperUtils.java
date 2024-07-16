@@ -313,7 +313,7 @@ public class MapperUtils {
 
                 while (iterator.hasNext()) {
                     var i = iterator.next();
-                    if (i.isResource()) {
+                    if (i.isResource() && i.asResource().isAnon()) {
                         resource.getModel().removeAll(i.asResource(), null, null);
                     }
                 }

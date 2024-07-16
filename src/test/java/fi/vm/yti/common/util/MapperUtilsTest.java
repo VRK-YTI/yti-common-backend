@@ -119,7 +119,7 @@ class MapperUtilsTest {
     }
 
     @Test
-    void testRDFListsWithResource() {
+    void testRDFListsWithAnonymousResource() {
         var model = ModelFactory.createDefaultModel();
         var resource = model.createResource("https://test-resource");
 
@@ -142,5 +142,22 @@ class MapperUtilsTest {
 
         RDFDataMgr.write(System.out, model, Lang.TURTLE);
         assertEquals(0, model.size());
+    }
+
+    @Test
+    void testRDFListWithResourceReferences() {
+        var model = ModelFactory.createDefaultModel();
+        var resource = model.createResource("https://test-resource-1")
+                .addProperty(RDFS.label, "Resource label");
+
+        var resourceWithList = model.createResource("https://test-resource-2");
+
+        MapperUtils.addListProperty(resourceWithList, SKOS.broader, List.of(resource));
+
+        // add the same list again
+        MapperUtils.addListProperty(resourceWithList, SKOS.broader, List.of(resource));
+
+        // referred resource should remain immutable
+        assertTrue(model.getResource("https://test-resource-1").listProperties(RDFS.label).hasNext());
     }
 }

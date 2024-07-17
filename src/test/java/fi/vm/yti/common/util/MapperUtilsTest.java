@@ -1,6 +1,5 @@
 package fi.vm.yti.common.util;
 
-import fi.vm.yti.common.TestUtils;
 import fi.vm.yti.common.exception.MappingError;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.ResourceFactory;

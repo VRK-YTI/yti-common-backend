@@ -1,5 +1,6 @@
 package fi.vm.yti.common.util;
 
+import fi.vm.yti.common.TestUtils;
 import fi.vm.yti.common.exception.MappingError;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.ResourceFactory;
@@ -159,5 +160,32 @@ class MapperUtilsTest {
 
         // referred resource should remain immutable
         assertTrue(model.getResource("https://test-resource-1").listProperties(RDFS.label).hasNext());
+    }
+
+    @Test
+    void testRemoveLists() {
+        var model = ModelFactory.createDefaultModel();
+
+        var anon = model.createResource()
+                .addProperty(RDFS.label, "Anonymous resource")
+                .addProperty(SKOS.note, model.createList(model.createResource()
+                        .addProperty(RDFS.label, "Nested list element")));
+
+        var list = model.createList(anon);
+
+        var referred = model.createResource("resource-ref")
+                .addProperty(RDFS.label, "Referred resource");
+
+        var resource = model.createResource("resource-1")
+                .addProperty(RDFS.label, "Resource with lists")
+                .addProperty(RDFS.seeAlso, list)
+                .addProperty(RDFS.subClassOf, model.createList(referred));
+
+        MapperUtils.removeAllLists(resource);
+
+        // should remove all properties with list object
+        assertEquals(1, resource.listProperties().toList().size());
+        // referred resource should still exist in the model
+        assertTrue(model.contains(referred, null));
     }
 }

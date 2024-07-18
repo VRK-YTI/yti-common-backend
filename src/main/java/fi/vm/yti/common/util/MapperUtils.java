@@ -7,9 +7,7 @@ import fi.vm.yti.common.exception.MappingError;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.datatypes.xsd.XSDDateTime;
-import org.apache.jena.rdf.model.Property;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdf.model.ResourceFactory;
+import org.apache.jena.rdf.model.*;
 import org.apache.jena.shared.JenaException;
 import org.apache.jena.vocabulary.DCTerms;
 import org.apache.jena.vocabulary.OWL;
@@ -304,5 +302,90 @@ public class MapperUtils {
             throw new MappingError("Could not get status from uri");
         }
         return Status.valueOf(uri.substring(uri.lastIndexOf("/") + 1));
+    }
+
+    /**
+     * Adds property to the resource as RDFList. An old list with the same property will be removed first.
+     * @param resource Resource
+     * @param property Property where list will be added
+     * @param values list of values
+     */
+    public static <T extends RDFNode> void addListProperty(Resource resource, Property property, List<T> values) {
+        removeList(resource, property);
+        if (values.isEmpty()) {
+            return;
+        }
+
+        var newList = resource.getModel().createList(values.iterator());
+        resource.addProperty(property, newList);
+    }
+
+    /**
+     * Returns RDFList. If resource doesn't have property or object is not RDFList, exception will be thrown
+     */
+    public static RDFList getList(Resource resource, Property property) {
+        if (resource.hasProperty(property)) {
+            var obj = resource.getProperty(property).getObject();
+            if (!obj.canAs(RDFList.class)) {
+                throw new MappingError(String.format("Property %s in resource %s is not RDFList",
+                        property, resource));
+            }
+            return resource.getModel().getList(obj.asResource());
+        }
+
+        throw new MappingError(String.format("Creating RDFList failed. Property %s missing in resource %s",
+                property, resource));
+    }
+
+    /**
+     * Gets RDFList values mapped as resources. If resource doesn't have property, or it's not RDFList, an empty
+     * list will be returned
+     */
+    public static List<Resource> getResourceList(Resource resource, Property property) {
+        if (resource.hasProperty(property)) {
+            var obj = resource.getProperty(property).getObject();
+            if (!obj.canAs(RDFList.class)) {
+               return new ArrayList<>();
+            }
+            return resource.getModel().getList(obj.asResource())
+                    .asJavaList()
+                    .stream()
+                    .map(RDFNode::asResource)
+                    .toList();
+        }
+        return new ArrayList<>();
+    }
+
+    /**
+     * Removes list and its anonymous resources
+     */
+    public static void removeList(Resource resource, Property property) {
+        if (resource.hasProperty(property)) {
+            var obj = resource.getProperty(property).getObject();
+            if (obj.canAs(RDFList.class)) {
+                var list = resource.getModel().getList(obj.asResource());
+                var iterator = list.iterator();
+
+                while (iterator.hasNext()) {
+                    var i = iterator.next();
+                    if (i.isResource() && i.asResource().isAnon()) {
+                        removeAllLists(i.asResource());
+                        resource.getModel().removeAll(i.asResource(), null, null);
+                    }
+                }
+                list.removeList();
+                resource.removeAll(property);
+            }
+        }
+    }
+
+    /**
+     * Removes all list properties from the resource
+     */
+    public static void removeAllLists(Resource resource) {
+        resource.listProperties()
+                .filterKeep(r -> r.getObject().canAs(RDFList.class))
+                .toList()
+                .forEach(prop -> removeList(resource, prop.getPredicate()));
     }
 }

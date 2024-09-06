@@ -36,11 +36,11 @@ public class MetaDataInfoDTO extends ResourceCommonInfoDTO {
         this.status = status;
     }
 
-    public GraphType getModelType() {
+    public GraphType getGraphType() {
         return graphType;
     }
 
-    public void setModelType(GraphType graphType) {
+    public void setGraphType(GraphType graphType) {
         this.graphType = graphType;
     }
 

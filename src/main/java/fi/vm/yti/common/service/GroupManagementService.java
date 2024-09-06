@@ -84,7 +84,7 @@ public class GroupManagementService {
 
     public void initUsers() {
         LOG.info("Initializing user cache");
-        var users = fetchUsers(false, true);
+        var users = fetchUsers(false, false);
 
         if (users == null || users.isEmpty()) {
             throw new GroupManagementException("No users found, is group service down?");
@@ -99,7 +99,7 @@ public class GroupManagementService {
     @Scheduled(fixedRateString = "${groupmanagement.syncInterval.users:30}", timeUnit = TimeUnit.MINUTES)
     public void updateUsers() {
         LOG.info("Updating user cache");
-        var users = fetchUsers(false, false);
+        var users = fetchUsers(false, true);
 
         if (users != null && !users.isEmpty()) {
             var oldSize = userCache.size();
@@ -168,14 +168,14 @@ public class GroupManagementService {
         return orgIds;
     }
 
-    private List<GroupManagementUserDTO> fetchUsers(boolean publicUsers, boolean init) {
+    private List<GroupManagementUserDTO> fetchUsers(boolean publicUsers, boolean lastModifiedOnly) {
         String apiPath = publicUsers ? PUBLIC_API : PRIVATE_API;
 
         var client = webClient.get()
                 .uri(builder -> builder
                         .pathSegment(apiPath, "users")
                         .build());
-        if (!init) {
+        if (lastModifiedOnly) {
             client.ifModifiedSince(ZonedDateTime.now().minusMinutes(30));
         }
 

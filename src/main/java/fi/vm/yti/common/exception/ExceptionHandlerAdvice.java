@@ -1,5 +1,7 @@
 package fi.vm.yti.common.exception;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.vm.yti.security.AuthorizationException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
@@ -21,7 +23,7 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
     @ExceptionHandler(Throwable.class)
     public void logAll(Throwable throwable,
                        HttpServletRequest request) throws Throwable {
-        logger.warn("Rogue catchable thrown while handling request to \"" + request.getServletPath() + "\"", throwable);
+        logger.error("Rogue catchable thrown while handling request to \"" + request.getServletPath() + "\"", throwable);
         throw throwable;
     }
 
@@ -53,7 +55,12 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
                             c.getInvalidValue().toString())
                 )
                 .toList();
-
+        try {
+            logger.error("Constraint validation exception: " + ex.getMessage());
+            logger.error(new ObjectMapper().writeValueAsString(errors));
+        } catch (JsonProcessingException e) {
+            logger.error(e.getMessage(), e);
+        }
         apiError.setDetails(errors);
         return buildResponseEntity(apiError);
     }

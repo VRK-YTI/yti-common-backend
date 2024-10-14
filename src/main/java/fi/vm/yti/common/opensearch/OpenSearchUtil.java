@@ -52,16 +52,32 @@ public class OpenSearchUtil {
         return out.toString();
     }
 
-
     public static Map<String, DynamicTemplate> getDynamicTemplate(String name, String pathMatch) {
         return Map.of(name, new DynamicTemplate.Builder()
                 .pathMatch(pathMatch)
-                .mapping(getTextKeyWordProperty()).build());
+                .mapping(getTextProperty("default")).build());
+    }
+
+    public static Map<String, DynamicTemplate> getDynamicTemplate(String name, String pathMatch, String analyzer) {
+        return Map.of(name, new DynamicTemplate.Builder()
+                .pathMatch(pathMatch)
+                .mapping(getTextProperty(analyzer)).build());
     }
 
     public static Property getKeywordProperty() {
         return new Property.Builder()
                 .keyword(new KeywordProperty.Builder().build())
+                .build();
+    }
+
+    private static Property getTextProperty(String analyzer) {
+        if (analyzer == null) {
+            analyzer = "default";
+        }
+        return new Property.Builder()
+                .text(new TextProperty.Builder()
+                        .analyzer(analyzer)
+                        .build())
                 .build();
     }
 

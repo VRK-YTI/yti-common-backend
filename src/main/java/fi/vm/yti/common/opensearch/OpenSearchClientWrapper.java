@@ -3,6 +3,7 @@ package fi.vm.yti.common.opensearch;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.OpenSearchException;
 import org.opensearch.client.opensearch._types.Refresh;
+import org.opensearch.client.opensearch._types.analysis.*;
 import org.opensearch.client.opensearch._types.mapping.TypeMapping;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch.core.BulkRequest;
@@ -14,9 +15,7 @@ import org.opensearch.client.opensearch.core.SearchResponse;
 import org.opensearch.client.opensearch.core.UpdateRequest;
 import org.opensearch.client.opensearch.core.bulk.BulkOperation;
 import org.opensearch.client.opensearch.core.bulk.IndexOperation;
-import org.opensearch.client.opensearch.indices.CreateIndexRequest;
-import org.opensearch.client.opensearch.indices.DeleteIndexRequest;
-import org.opensearch.client.opensearch.indices.ExistsRequest;
+import org.opensearch.client.opensearch.indices.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,9 +73,53 @@ public class OpenSearchClientWrapper {
     }
 
     public void createIndex(String index, TypeMapping mappings) {
+
+        var ngram = new Tokenizer.Builder()
+                .definition(new TokenizerDefinition.Builder()
+                        .ngram(new NGramTokenizer.Builder()
+                            .tokenChars(List.of(TokenChar.Letter, TokenChar.Digit))
+                            .maxGram(3)
+                            .minGram(3)
+                            .build())
+                    .build())
+                .build();
+
+        var edgeNgram = new Tokenizer.Builder()
+                .definition(new TokenizerDefinition.Builder()
+                        .edgeNgram(new EdgeNGramTokenizer.Builder()
+                                .tokenChars(List.of(TokenChar.Letter, TokenChar.Digit))
+                                .maxGram(20)
+                                .minGram(3)
+                                .build())
+                        .build())
+                .build();
+
+        var edgeNgramAnalyzer = new Analyzer.Builder()
+                .custom(new CustomAnalyzer.Builder()
+                    .tokenizer("edgeNgram")
+                    .filter(List.of("lowercase"))
+                    .build())
+                .build();
+
+        var ngramAnalyzer = new Analyzer.Builder()
+                .custom(new CustomAnalyzer.Builder()
+                        .tokenizer("ngram")
+                        .filter(List.of("lowercase"))
+                        .build())
+                .build();
+
         var request = new CreateIndexRequest.Builder()
                 .index(index)
-                .mappings(mappings).build();
+                .mappings(mappings)
+                .settings(new IndexSettings.Builder()
+                        .analysis(new IndexSettingsAnalysis.Builder()
+                                .analyzer("edgeNgramAnalyzer", edgeNgramAnalyzer)
+                                .analyzer("ngramAnalyzer", ngramAnalyzer)
+                                .tokenizer("edgeNgram", edgeNgram)
+                                .tokenizer("ngram", ngram)
+                                .build())
+                        .build())
+                .build();
         logPayload(request, index);
         try {
             client.indices().create(request);

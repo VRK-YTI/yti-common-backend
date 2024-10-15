@@ -52,11 +52,16 @@ public class OpenSearchUtil {
         return out.toString();
     }
 
-
     public static Map<String, DynamicTemplate> getDynamicTemplate(String name, String pathMatch) {
         return Map.of(name, new DynamicTemplate.Builder()
                 .pathMatch(pathMatch)
-                .mapping(getTextKeyWordProperty()).build());
+                .mapping(getTextProperty()).build());
+    }
+
+    public static Map<String, DynamicTemplate> getDynamicTemplateWithSortKey(String name, String pathMatch) {
+        return Map.of(name, new DynamicTemplate.Builder()
+                .pathMatch(pathMatch)
+                .mapping(getSortedKeyWordProperty()).build());
     }
 
     public static Property getKeywordProperty() {
@@ -65,10 +70,33 @@ public class OpenSearchUtil {
                 .build();
     }
 
-    public static Property getTextKeyWordProperty() {
+    public static Property getTextProperty() {
+        return getTextProperty(null);
+    }
+
+    public static Property getTextProperty(String analyzer) {
+        if (analyzer == null) {
+            analyzer = "default";
+        }
         return new Property.Builder()
                 .text(new TextProperty.Builder()
-                        .fields("keyword",
+                        .analyzer("default")
+                        .build())
+                .build();
+    }
+
+    public static Property getSortedKeyWordProperty() {
+        return getSortedKeyWordProperty(null);
+    }
+
+    public static Property getSortedKeyWordProperty(String analyzer) {
+        if (analyzer == null) {
+            analyzer = "default";
+        }
+        return new Property.Builder()
+                .text(new TextProperty.Builder()
+                        .analyzer(analyzer)
+                        .fields("sortKey",
                                 new KeywordProperty.Builder()
                                         .normalizer("lowercase")
                                         .ignoreAbove(256)
@@ -101,7 +129,7 @@ public class OpenSearchUtil {
 
     public static List<Map<String, DynamicTemplate>> getMetaDataDynamicTemplates() {
         return List.of(
-                getDynamicTemplate("label", "label.*"),
+                getDynamicTemplateWithSortKey("label", "label.*"),
                 getDynamicTemplate("description", "description.*")
         );
     }

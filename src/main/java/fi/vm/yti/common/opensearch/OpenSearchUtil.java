@@ -64,10 +64,20 @@ public class OpenSearchUtil {
                 .mapping(getTextProperty(analyzer)).build());
     }
 
+    public static Map<String, DynamicTemplate> getDynamicTemplateWithSortKey(String name, String pathMatch) {
+        return Map.of(name, new DynamicTemplate.Builder()
+                .pathMatch(pathMatch)
+                .mapping(getSortedKeyWordProperty()).build());
+    }
+
     public static Property getKeywordProperty() {
         return new Property.Builder()
                 .keyword(new KeywordProperty.Builder().build())
                 .build();
+    }
+
+    public static Property getTextProperty() {
+        return getTextProperty(null);
     }
 
     private static Property getTextProperty(String analyzer) {
@@ -81,10 +91,18 @@ public class OpenSearchUtil {
                 .build();
     }
 
-    public static Property getTextKeyWordProperty() {
+    public static Property getSortedKeyWordProperty() {
+        return getSortedKeyWordProperty(null);
+    }
+
+    public static Property getSortedKeyWordProperty(String analyzer) {
+        if (analyzer == null) {
+            analyzer = "default";
+        }
         return new Property.Builder()
                 .text(new TextProperty.Builder()
-                        .fields("keyword",
+                        .analyzer(analyzer)
+                        .fields("sortKey",
                                 new KeywordProperty.Builder()
                                         .normalizer("lowercase")
                                         .ignoreAbove(256)
@@ -117,7 +135,7 @@ public class OpenSearchUtil {
 
     public static List<Map<String, DynamicTemplate>> getMetaDataDynamicTemplates() {
         return List.of(
-                getDynamicTemplate("label", "label.*"),
+                getDynamicTemplateWithSortKey("label", "label.*"),
                 getDynamicTemplate("description", "description.*")
         );
     }

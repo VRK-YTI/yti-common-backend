@@ -290,7 +290,7 @@ public class MapperUtils {
             return;
         }
         resource.removeAll(SuomiMeta.publicationStatus);
-        resource.addProperty(SuomiMeta.publicationStatus, getStatusUri(status));
+        resource.addProperty(SuomiMeta.publicationStatus, ResourceFactory.createResource(getStatusUri(status)));
     }
 
     public static String getStatusUri(Status status) {

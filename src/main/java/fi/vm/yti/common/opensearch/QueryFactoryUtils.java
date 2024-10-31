@@ -1,13 +1,12 @@
 package fi.vm.yti.common.opensearch;
 
+import fi.vm.yti.common.enums.Status;
 import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.SortOptions;
 import org.opensearch.client.opensearch._types.SortOptionsBuilders;
 import org.opensearch.client.opensearch._types.SortOrder;
 import org.opensearch.client.opensearch._types.mapping.FieldType;
 import org.opensearch.client.opensearch._types.query_dsl.*;
-
-import fi.vm.yti.common.enums.Status;
 
 import java.util.Collection;
 
@@ -27,6 +26,17 @@ public class QueryFactoryUtils {
             return DEFAULT_PAGE_FROM;
         } else {
             return pageFrom;
+        }
+    }
+
+    public static int pageFrom(BaseSearchRequest request) {
+        var pageFrom = request.getPageFrom();
+        var pageSize = pageSize(request.getPageSize());
+
+        if (pageFrom == null || pageFrom <= 0) {
+            return DEFAULT_PAGE_FROM;
+        } else {
+            return (pageFrom - 1) * pageSize;
         }
     }
 

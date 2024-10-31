@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static fi.vm.yti.common.Constants.*;
+import static fi.vm.yti.common.Constants.DEFAULT_LANGUAGE;
 
 @Service
 public class FrontendService {

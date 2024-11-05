@@ -3,11 +3,10 @@ package fi.vm.yti.common.service;
 import fi.vm.yti.common.Constants;
 import fi.vm.yti.common.TestUtils;
 import fi.vm.yti.common.dto.GroupManagementUserDTO;
-import fi.vm.yti.common.dto.ResourceInfoBaseDTO;
+import fi.vm.yti.common.dto.ResourceCommonInfoDTO;
 import fi.vm.yti.common.dto.UserDTO;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.repository.CommonRepository;
-
 import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -25,9 +24,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.time.LocalDateTime;
 import java.util.*;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
 @Import({
@@ -50,7 +49,7 @@ class GroupManagementServiceTest {
 
     @Test
     void testMapUserToCommonDTO() {
-        var common = new ResourceInfoBaseDTO();
+        var common = new ResourceCommonInfoDTO();
         common.setCreator(creatorUser);
         common.setModifier(modifierUser);
 
@@ -123,6 +122,4 @@ class GroupManagementServiceTest {
 
         assertEquals(Set.of(orgId, parentId), groupManagementService.getOrganizationsForUser(user));
     }
-
-
 }

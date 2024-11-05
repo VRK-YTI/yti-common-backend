@@ -124,7 +124,8 @@ public class OpenSearchClientWrapper {
                         .build())
                 .build();
 
-        var keywordNormalizer = new Normalizer.Builder()
+        // sort key gereration with trim and lowercase filters
+        var sortKeyNormalizer = new Normalizer.Builder()
                 .custom(new CustomNormalizer.Builder()
                     .filter("trim", "lowercase")
                         .build())
@@ -135,7 +136,7 @@ public class OpenSearchClientWrapper {
                 .mappings(mappings)
                 .settings(new IndexSettings.Builder()
                         .analysis(new IndexSettingsAnalysis.Builder()
-                                .normalizer("sortKeyNormalizer", keywordNormalizer)
+                                .normalizer("sortKeyNormalizer", sortKeyNormalizer)
                                 .charFilter("stripHtml", htmlStripFilter)
                                 .analyzer("yti", customAnalyzer)
                                 .analyzer("edgeNgramAnalyzer", edgeNgramAnalyzer)

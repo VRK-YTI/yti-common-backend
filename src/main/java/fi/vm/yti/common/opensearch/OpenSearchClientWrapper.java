@@ -108,11 +108,37 @@ public class OpenSearchClientWrapper {
                         .build())
                 .build();
 
+        // filter for stripping html tags
+        var htmlStripFilter = new CharFilter.Builder()
+                .definition(new CharFilterDefinition.Builder()
+                        .htmlStrip(new HtmlStripCharFilter.Builder().build())
+                        .build())
+                .build();
+
+        // default analyzer used in test fields
+        var customAnalyzer = new Analyzer.Builder()
+                .custom(new CustomAnalyzer.Builder()
+                        .tokenizer("whitespace")
+                        .charFilter("stripHtml")
+                        .filter(List.of("lowercase"))
+                        .build())
+                .build();
+
+        // sort key gereration with trim and lowercase filters
+        var sortKeyNormalizer = new Normalizer.Builder()
+                .custom(new CustomNormalizer.Builder()
+                    .filter("trim", "lowercase")
+                        .build())
+                .build();
+
         var request = new CreateIndexRequest.Builder()
                 .index(index)
                 .mappings(mappings)
                 .settings(new IndexSettings.Builder()
                         .analysis(new IndexSettingsAnalysis.Builder()
+                                .normalizer("sortKeyNormalizer", sortKeyNormalizer)
+                                .charFilter("stripHtml", htmlStripFilter)
+                                .analyzer("yti", customAnalyzer)
                                 .analyzer("edgeNgramAnalyzer", edgeNgramAnalyzer)
                                 .analyzer("ngramAnalyzer", ngramAnalyzer)
                                 .tokenizer("edgeNgram", edgeNgram)

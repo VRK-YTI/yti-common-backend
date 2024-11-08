@@ -101,10 +101,14 @@ public class QueryFactoryUtils {
     }
 
     public static Query labelQuery(String query) {
-        return QueryStringQuery.of(q -> q
-                .query("*" + query.trim() + "*")
+        var trimmed = query.trim();
+        final var qs = trimmed.contains(" ")
+                ? String.format("\"%s\"", trimmed)
+                : String.format("%s~1 *%s*", trimmed, trimmed);
+        return QueryStringQuery.of(q-> q
+                .query(qs)
                 .fields("label.*")
-                .fuzziness("2")).toQuery();
+        ).toQuery();
     }
 
 }

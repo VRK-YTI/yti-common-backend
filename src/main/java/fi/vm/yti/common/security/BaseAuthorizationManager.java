@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public interface BaseAuthorizationManager {
 
-    boolean hasRightToModel(String prefix, Model model, Role role);
+    boolean hasRightToModel(String prefix, Model model, Role... role);
 
     boolean hasRightToAnyOrganization(Collection<UUID> organizations, Role... role);
 

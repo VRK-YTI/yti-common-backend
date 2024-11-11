@@ -7,6 +7,7 @@ import fi.vm.yti.common.dto.ResourceCommonInfoDTO;
 import fi.vm.yti.common.dto.UserDTO;
 import fi.vm.yti.common.properties.SuomiMeta;
 import fi.vm.yti.common.repository.CommonRepository;
+import fi.vm.yti.security.AuthenticatedUserProvider;
 import fi.vm.yti.security.Role;
 import fi.vm.yti.security.YtiUser;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -40,6 +41,9 @@ class GroupManagementServiceTest {
 
     @MockBean
     private CommonRepository coreRepository;
+
+    @MockBean
+    private AuthenticatedUserProvider userProvider;
 
     @Autowired
     GroupManagementService groupManagementService;

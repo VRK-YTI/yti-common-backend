@@ -35,6 +35,10 @@ public class FrontendService {
                 .toList();
     }
 
+    public List<ServiceCategoryDTO> getServiceCategories() {
+        return getServiceCategories(DEFAULT_LANGUAGE);
+    }
+
     public List<ServiceCategoryDTO> getServiceCategories(String sortLanguage) {
         var serviceCategories = coreRepository.getServiceCategories();
         var dtos = ServiceCategoryMapper.mapToListServiceCategoryDTO(serviceCategories);

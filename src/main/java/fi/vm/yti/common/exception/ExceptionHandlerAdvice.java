@@ -1,5 +1,7 @@
 package fi.vm.yti.common.exception;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fi.vm.yti.security.AuthorizationException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
@@ -14,15 +16,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
+import static org.springframework.http.HttpStatus.*;
 
 public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(Throwable.class)
     public void logAll(Throwable throwable,
                        HttpServletRequest request) throws Throwable {
-        logger.warn("Rogue catchable thrown while handling request to \"" + request.getServletPath() + "\"", throwable);
+        logger.error("Rogue catchable thrown while handling request to \"" + request.getServletPath() + "\"", throwable);
         throw throwable;
     }
 
@@ -32,7 +33,7 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
             @NotNull HttpHeaders headers,
             @NotNull HttpStatusCode status,
             @NotNull WebRequest request) {
-        return buildResponseEntity(new ApiError(HttpStatus.BAD_REQUEST, "Malformed JSON request", ex));
+        return buildResponseEntity(new ApiError(HttpStatus.BAD_REQUEST, ex.getMessage(), ex));
     }
 
     @ExceptionHandler(AuthorizationException.class)
@@ -54,7 +55,12 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
                             c.getInvalidValue().toString())
                 )
                 .toList();
-
+        try {
+            logger.error("Constraint validation exception: " + ex.getMessage());
+            logger.error(new ObjectMapper().writeValueAsString(errors));
+        } catch (JsonProcessingException e) {
+            logger.error(e.getMessage(), e);
+        }
         apiError.setDetails(errors);
         return buildResponseEntity(apiError);
     }
@@ -69,6 +75,13 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     protected ResponseEntity<Object> handleNotFoundException(ResourceNotFoundException ex) {
         var apiError = new ApiError(NOT_FOUND);
+        apiError.setMessage(ex.getMessage());
+        return buildResponseEntity(apiError);
+    }
+
+    @ExceptionHandler(ResourceExistsException.class)
+    protected ResponseEntity<Object> handleResourceExistsException(ResourceExistsException ex) {
+        var apiError = new ApiError(CONFLICT);
         apiError.setMessage(ex.getMessage());
         return buildResponseEntity(apiError);
     }

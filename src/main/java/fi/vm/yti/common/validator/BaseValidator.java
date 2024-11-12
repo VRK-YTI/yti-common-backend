@@ -68,4 +68,24 @@ public abstract class BaseValidator implements Annotation {
         }
     }
 
+    public void checkHasValue(ConstraintValidatorContext context, String value, String property) {
+        if (value == null || value.isBlank()) {
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, property);
+        }
+    }
+
+    public void checkResourceIdentifier(ConstraintValidatorContext context, String value, boolean update) {
+        String property = "identifier";
+        if (value != null && update) {
+            addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, property);
+        } else if (value == null && !update) {
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, property);
+        } else if (value != null && (value.length() < ValidationConstants.PREFIX_MIN_LENGTH
+                                     || value.length() > ValidationConstants.PREFIX_MAX_LENGTH)) {
+            addConstraintViolation(context, property + "-character-count-mismatch", property);
+        } else if (value != null && !value.matches(ValidationConstants.RESOURCE_IDENTIFIER_REGEX)) {
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_INVALID, property);
+        }
+    }
+
 }

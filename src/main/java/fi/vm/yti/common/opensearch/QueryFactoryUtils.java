@@ -48,7 +48,7 @@ public class QueryFactoryUtils {
 
     public static SortOptions getLangSortOptions(String sortLang) {
         var builder = SortOptionsBuilders.field()
-                .field("label." + QueryFactoryUtils.getSortLang(sortLang) + ".keyword")
+                .field("label." + QueryFactoryUtils.getSortLang(sortLang) + ".sortKey")
                 .order(SortOrder.Asc)
                 .unmappedType(FieldType.Keyword)
                 .build();

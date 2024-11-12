@@ -3,6 +3,7 @@ package fi.vm.yti.common.opensearch;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.OpenSearchException;
 import org.opensearch.client.opensearch._types.Refresh;
+import org.opensearch.client.opensearch._types.analysis.*;
 import org.opensearch.client.opensearch._types.mapping.TypeMapping;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
 import org.opensearch.client.opensearch.core.BulkRequest;
@@ -14,9 +15,7 @@ import org.opensearch.client.opensearch.core.SearchResponse;
 import org.opensearch.client.opensearch.core.UpdateRequest;
 import org.opensearch.client.opensearch.core.bulk.BulkOperation;
 import org.opensearch.client.opensearch.core.bulk.IndexOperation;
-import org.opensearch.client.opensearch.indices.CreateIndexRequest;
-import org.opensearch.client.opensearch.indices.DeleteIndexRequest;
-import org.opensearch.client.opensearch.indices.ExistsRequest;
+import org.opensearch.client.opensearch.indices.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +57,7 @@ public class OpenSearchClientWrapper {
     /**
      * Delete an index if it exists.
      *
-     * @param index index name
+     * @param indexes index name
      * @throws IOException in case there is a problem sending the request or parsing back the response
      */
     public void cleanIndexes(String... indexes) throws IOException {
@@ -74,9 +73,79 @@ public class OpenSearchClientWrapper {
     }
 
     public void createIndex(String index, TypeMapping mappings) {
+
+        var ngram = new Tokenizer.Builder()
+                .definition(new TokenizerDefinition.Builder()
+                        .ngram(new NGramTokenizer.Builder()
+                            .tokenChars(List.of(TokenChar.Letter, TokenChar.Digit))
+                            .maxGram(3)
+                            .minGram(3)
+                            .build())
+                    .build())
+                .build();
+
+        var edgeNgram = new Tokenizer.Builder()
+                .definition(new TokenizerDefinition.Builder()
+                        .edgeNgram(new EdgeNGramTokenizer.Builder()
+                                .tokenChars(List.of(TokenChar.Letter, TokenChar.Digit))
+                                .maxGram(20)
+                                .minGram(3)
+                                .build())
+                        .build())
+                .build();
+
+        var edgeNgramAnalyzer = new Analyzer.Builder()
+                .custom(new CustomAnalyzer.Builder()
+                    .tokenizer("edgeNgram")
+                    .filter(List.of("lowercase"))
+                    .build())
+                .build();
+
+        var ngramAnalyzer = new Analyzer.Builder()
+                .custom(new CustomAnalyzer.Builder()
+                        .tokenizer("ngram")
+                        .filter(List.of("lowercase"))
+                        .build())
+                .build();
+
+        // filter for stripping html tags
+        var htmlStripFilter = new CharFilter.Builder()
+                .definition(new CharFilterDefinition.Builder()
+                        .htmlStrip(new HtmlStripCharFilter.Builder().build())
+                        .build())
+                .build();
+
+        // default analyzer used in test fields
+        var customAnalyzer = new Analyzer.Builder()
+                .custom(new CustomAnalyzer.Builder()
+                        .tokenizer("whitespace")
+                        .charFilter("stripHtml")
+                        .filter(List.of("lowercase"))
+                        .build())
+                .build();
+
+        // sort key gereration with trim and lowercase filters
+        var sortKeyNormalizer = new Normalizer.Builder()
+                .custom(new CustomNormalizer.Builder()
+                    .filter("trim", "lowercase")
+                        .build())
+                .build();
+
         var request = new CreateIndexRequest.Builder()
                 .index(index)
-                .mappings(mappings).build();
+                .mappings(mappings)
+                .settings(new IndexSettings.Builder()
+                        .analysis(new IndexSettingsAnalysis.Builder()
+                                .normalizer("sortKeyNormalizer", sortKeyNormalizer)
+                                .charFilter("stripHtml", htmlStripFilter)
+                                .analyzer("yti", customAnalyzer)
+                                .analyzer("edgeNgramAnalyzer", edgeNgramAnalyzer)
+                                .analyzer("ngramAnalyzer", ngramAnalyzer)
+                                .tokenizer("edgeNgram", edgeNgram)
+                                .tokenizer("ngram", ngram)
+                                .build())
+                        .build())
+                .build();
         logPayload(request, index);
         try {
             client.indices().create(request);
@@ -86,10 +155,8 @@ public class OpenSearchClientWrapper {
         }
     }
 
-    public <T extends IndexBase> void putToIndex(String index,
-                                String id,
-                                T doc) {
-        String encId = CommonUtils.encode(id);
+    public <T extends IndexBase> void putToIndex(String index, T doc) {
+        String encId = CommonUtils.encode(doc.getId());
         try {
             IndexRequest<T> indexReq = new IndexRequest.Builder<T>()
                     .index(index)
@@ -100,16 +167,14 @@ public class OpenSearchClientWrapper {
 
             logPayload(indexReq, index);
             client.index(indexReq);
-            logger.debug("Indexed {} to {}}", id, index);
+            logger.debug("Indexed {} to {}}", doc.getId(), index);
         } catch (IOException | OpenSearchException e) {
-            logger.warn("Could not add to index: " + id, e);
+            logger.warn("Could not add to index: " + doc.getId(), e);
         }
     }
 
-    public <T> void updateToIndex(String index,
-                                    String id,
-                                    T doc) {
-        String encId = CommonUtils.encode(id);
+    public <T extends IndexBase> void updateToIndex(String index, T doc) {
+        String encId = CommonUtils.encode(doc.getId());
         try {
             var request = new UpdateRequest.Builder<String, T>()
                     .index(index)
@@ -119,9 +184,9 @@ public class OpenSearchClientWrapper {
                     .build();
             logPayload(request, index);
             client.update(request, String.class);
-            logger.debug("Updated {} to {}", id, index);
+            logger.debug("Updated {} to {}", doc.getId(), index);
         } catch (IOException | OpenSearchException e) {
-            logger.warn("Could not update to index: " + id, e);
+            logger.warn("Could not update to index: " + doc.getId(), e);
         }
     }
 

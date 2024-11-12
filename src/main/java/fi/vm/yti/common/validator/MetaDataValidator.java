@@ -26,21 +26,25 @@ public abstract class MetaDataValidator<R extends BaseRepository> extends BaseVa
      * Check if prefix is valid, if updating prefix cannot be set
      *
      * @param context Constraint validator context
-     * @param value DataModel
+     * @param value   DataModel
      */
     public void checkModelPrefix(ConstraintValidatorContext context, MetaDataDTO value, boolean update) {
         final var prefixPropertyLabel = "prefix";
         var prefix = value.getPrefix();
 
-        checkPrefix(context, prefix, prefixPropertyLabel, update);
+        // invalid prefix might cause an internal server error in sparql query
+        var isPrefixValid = checkPrefix(context, prefix, prefixPropertyLabel, update);
 
-        if (repository.graphExists(getNamespacePrefix() + prefix + Constants.RESOURCE_SEPARATOR)) {
-            // Checking if in use is different for data models and its resources so it is not in the above function
-            addConstraintViolation(context, "prefix-in-use", prefixPropertyLabel);
+        if (isPrefixValid && !update) {
+            boolean exist = repository.graphExists(getNamespacePrefix() + prefix + Constants.RESOURCE_SEPARATOR);
+            if (exist) {
+                addConstraintViolation(context, "prefix-in-use", prefixPropertyLabel);
+            }
         }
     }
 
-    public void checkPrefix(ConstraintValidatorContext context, final String value, String propertyName, boolean update) {
+    public boolean checkPrefix(ConstraintValidatorContext context, final String value, String propertyName, boolean update) {
+        var validPrefix = false;
         if (update && value != null) {
             addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, propertyName);
         } else if (!update && (value == null || value.isBlank())) {
@@ -51,7 +55,10 @@ public abstract class MetaDataValidator<R extends BaseRepository> extends BaseVa
                 value.length() < ValidationConstants.PREFIX_MIN_LENGTH
                 || value.length() > ValidationConstants.PREFIX_MAX_LENGTH)) {
             addConstraintViolation(context, propertyName + "-character-count-mismatch", propertyName);
+        } else {
+            validPrefix = true;
         }
+        return validPrefix;
     }
 
     /**

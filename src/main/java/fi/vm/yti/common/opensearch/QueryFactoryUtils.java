@@ -8,7 +8,10 @@ import org.opensearch.client.opensearch._types.SortOrder;
 import org.opensearch.client.opensearch._types.mapping.FieldType;
 import org.opensearch.client.opensearch._types.query_dsl.*;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class QueryFactoryUtils {
 
@@ -100,14 +103,23 @@ public class QueryFactoryUtils {
         return exists;
     }
 
-    public static Query labelQuery(String query) {
+    public static Query labelQuery(String query, String... fields) {
+        List<String> searchFields = fields.length == 0
+                ? List.of("label.*")
+                : Arrays.stream(fields).toList();
+
         var trimmed = query.trim();
         final var qs = trimmed.contains(" ")
-                ? String.format("\"%s\"", trimmed)
+                ? Arrays.stream(trimmed.split("\\s+"))
+                .map(q -> String.format("*%s*", q))
+                .collect(Collectors.joining(" "))
                 : String.format("%s~1 *%s*", trimmed, trimmed);
         return QueryStringQuery.of(q-> q
                 .query(qs)
-                .fields("label.*")
+                .defaultOperator(trimmed.contains(" ")
+                        ? Operator.And
+                        : Operator.Or)
+                .fields(searchFields)
         ).toQuery();
     }
 

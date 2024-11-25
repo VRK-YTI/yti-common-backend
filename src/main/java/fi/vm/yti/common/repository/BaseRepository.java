@@ -2,6 +2,7 @@ package fi.vm.yti.common.repository;
 
 import fi.vm.yti.common.exception.JenaQueryException;
 import fi.vm.yti.common.exception.ResourceNotFoundException;
+import fi.vm.yti.common.util.GraphURI;
 import org.apache.jena.arq.querybuilder.AskBuilder;
 import org.apache.jena.arq.querybuilder.UpdateBuilder;
 import org.apache.jena.arq.querybuilder.WhereBuilder;
@@ -70,17 +71,29 @@ public abstract class BaseRepository {
         }
     }
 
-    public void deleteResource(String resource) {
+    public void deleteResource(GraphURI uri) {
+        deleteResource(uri.getResourceURI());
+    }
+
+    public void deleteResource(String resourceURI) {
+        var uri = NodeFactory.createURI(resourceURI);
+        var graph = NodeFactory.createURI(uri.getNameSpace());
+
         var deleteBuilder = new UpdateBuilder();
         var expr = deleteBuilder.getExprFactory();
-        var filter = expr.or(expr.eq("?s", NodeFactory.createURI(resource)), expr.eq("?o", NodeFactory.createURI(resource)));
-        deleteBuilder.addDelete("?g", "?s", "?p", "?o")
-                .addGraph("?g", new WhereBuilder().addWhere("?s", "?p", "?o").addFilter(filter));
+        var filter = expr.or(
+                expr.eq("?s", NodeFactory.createURI(resourceURI)),
+                expr.eq("?o", NodeFactory.createURI(resourceURI))
+        );
+        deleteBuilder.addDelete(graph, "?s", "?p", "?o")
+                .addGraph(graph, new WhereBuilder()
+                        .addWhere("?s", "?p", "?o")
+                        .addFilter(filter));
         try {
             update.update(deleteBuilder.buildRequest());
         } catch (HttpException ex) {
             if (ex.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
-                throw new ResourceNotFoundException(resource);
+                throw new ResourceNotFoundException(resourceURI);
             } else {
                 throw new JenaQueryException();
             }

@@ -12,6 +12,6 @@ Tags are created manually. Before creating tag, check project current version
 > Task :currentVersion
 Project version: 0.1.0-SNAPSHOT
 ```
-Create corresponding tag, in this case v0.1.0, and push to remote. Snapshot version is updated automatically after next commit to develop branch. 
+Create corresponding tag, in this case v0.1.0, and push to remote. Snapshot version is updated automatically after next commit to develop branch.
 
 Releasing to local repository, run command `./gradlew publishToMavenLocal`

@@ -1,31 +1,24 @@
 package fi.vm.yti.common.opensearch;
 
+import com.google.common.collect.Iterables;
+import fi.vm.yti.common.exception.OpenSearchExceptionWrapper;
+import fi.vm.yti.common.util.CommonUtils;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.OpenSearchException;
 import org.opensearch.client.opensearch._types.Refresh;
 import org.opensearch.client.opensearch._types.analysis.*;
 import org.opensearch.client.opensearch._types.mapping.TypeMapping;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
-import org.opensearch.client.opensearch.core.BulkRequest;
-import org.opensearch.client.opensearch.core.DeleteByQueryRequest;
-import org.opensearch.client.opensearch.core.DeleteRequest;
-import org.opensearch.client.opensearch.core.IndexRequest;
-import org.opensearch.client.opensearch.core.SearchRequest;
-import org.opensearch.client.opensearch.core.SearchResponse;
-import org.opensearch.client.opensearch.core.UpdateRequest;
+import org.opensearch.client.opensearch.core.*;
 import org.opensearch.client.opensearch.core.bulk.BulkOperation;
 import org.opensearch.client.opensearch.core.bulk.IndexOperation;
+import org.opensearch.client.opensearch.indices.ExistsRequest;
 import org.opensearch.client.opensearch.indices.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import com.google.common.collect.Iterables;
-
-import fi.vm.yti.common.exception.OpenSearchExceptionWrapper;
-import fi.vm.yti.common.util.CommonUtils;
 
 import java.io.IOException;
 import java.util.ArrayList;

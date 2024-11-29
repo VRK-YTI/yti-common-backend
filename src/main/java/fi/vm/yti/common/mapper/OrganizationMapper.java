@@ -18,7 +18,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static fi.vm.yti.common.Constants.*;
+import static fi.vm.yti.common.Constants.URN_UUID;
+import static fi.vm.yti.common.Constants.USED_LANGUAGES;
 import static fi.vm.yti.common.util.MapperUtils.*;
 
 public class OrganizationMapper {

@@ -1,9 +1,9 @@
 package fi.vm.yti.common.opensearch;
 
+import fi.vm.yti.common.enums.Status;
+
 import java.util.List;
 import java.util.Map;
-
-import fi.vm.yti.common.enums.Status;
 
 public abstract class IndexBase {
     private String id;

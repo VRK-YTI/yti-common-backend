@@ -1,8 +1,8 @@
 package fi.vm.yti.common.opensearch;
 
-import java.util.Set;
-
 import fi.vm.yti.common.enums.Status;
+
+import java.util.Set;
 
 public abstract class BaseSearchRequest {
 

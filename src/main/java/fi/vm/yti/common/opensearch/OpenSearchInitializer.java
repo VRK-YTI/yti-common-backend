@@ -1,13 +1,13 @@
 package fi.vm.yti.common.opensearch;
 
-import java.util.Map;
-
 import org.opensearch.client.opensearch._types.mapping.TypeMapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 @Service
 public class OpenSearchInitializer {
@@ -25,7 +25,11 @@ public class OpenSearchInitializer {
     }
 
     public void initIndexes(InitIndexesFunction initFn, Map<String, TypeMapping> mappings) {
-        if (!initIndexesOnStartUp) {
+        initIndexes(initFn, mappings, false);
+    }
+
+    public void initIndexes(InitIndexesFunction initFn, Map<String, TypeMapping> mappings, boolean force) {
+        if (!initIndexesOnStartUp && !force) {
             LOG.info("Index initialization is disabled on startup. Please set openSearch.initOnStartUp=true to reindex");
             return;
         }

@@ -1,12 +1,11 @@
 package fi.vm.yti.common.service;
 
+import fi.vm.yti.common.repository.CommonRepository;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.ResourceFactory;
 import org.apache.jena.vocabulary.OWL;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import fi.vm.yti.common.repository.CommonRepository;
 
 @Service
 public class VersionService {

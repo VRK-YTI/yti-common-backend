@@ -25,7 +25,7 @@ public class BaseAuthorizationManagerImpl implements BaseAuthorizationManager {
     }
 
     @Override
-    public boolean hasRightToModel(String uri, Model model, Role role) {
+    public boolean hasRightToModel(String uri, Model model, Role... role) {
         var oldRes = model.getResource(uri);
         var organizations = oldRes.listProperties(DCTerms.contributor).toList().stream().map(prop -> {
             var orgUri = prop.getObject().toString();

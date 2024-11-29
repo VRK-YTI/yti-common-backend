@@ -1,5 +1,6 @@
 package fi.vm.yti.common.opensearch;
 
+import fi.vm.yti.common.enums.Status;
 import org.opensearch.client.opensearch._types.FieldValue;
 import org.opensearch.client.opensearch._types.SortOptions;
 import org.opensearch.client.opensearch._types.SortOptionsBuilders;
@@ -7,9 +8,10 @@ import org.opensearch.client.opensearch._types.SortOrder;
 import org.opensearch.client.opensearch._types.mapping.FieldType;
 import org.opensearch.client.opensearch._types.query_dsl.*;
 
-import fi.vm.yti.common.enums.Status;
-
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class QueryFactoryUtils {
 
@@ -27,6 +29,17 @@ public class QueryFactoryUtils {
             return DEFAULT_PAGE_FROM;
         } else {
             return pageFrom;
+        }
+    }
+
+    public static int pageFrom(BaseSearchRequest request) {
+        var pageFrom = request.getPageFrom();
+        var pageSize = pageSize(request.getPageSize());
+
+        if (pageFrom == null || pageFrom <= 0) {
+            return DEFAULT_PAGE_FROM;
+        } else {
+            return (pageFrom - 1) * pageSize;
         }
     }
 
@@ -90,11 +103,24 @@ public class QueryFactoryUtils {
         return exists;
     }
 
-    public static Query labelQuery(String query) {
-        return QueryStringQuery.of(q -> q
-                .query("*" + query.trim() + "*")
-                .fields("label.*")
-                .fuzziness("2")).toQuery();
+    public static Query labelQuery(String query, String... fields) {
+        List<String> searchFields = fields.length == 0
+                ? List.of("label.*")
+                : Arrays.stream(fields).toList();
+
+        var trimmed = query.trim();
+        final var qs = trimmed.contains(" ")
+                ? Arrays.stream(trimmed.split("\\s+"))
+                .map(q -> String.format("*%s*", q))
+                .collect(Collectors.joining(" "))
+                : String.format("%s~1 *%s*", trimmed, trimmed);
+        return QueryStringQuery.of(q-> q
+                .query(qs)
+                .defaultOperator(trimmed.contains(" ")
+                        ? Operator.And
+                        : Operator.Or)
+                .fields(searchFields)
+        ).toQuery();
     }
 
 }

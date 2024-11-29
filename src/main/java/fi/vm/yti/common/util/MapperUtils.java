@@ -74,8 +74,14 @@ public class MapperUtils {
             return null;
         }
         var object = prop.getObject();
-        //null check for object
-        return object == null ? null : object.toString();
+
+        if (object == null) {
+            return null;
+        } else if (object.isLiteral()) {
+            return object.asLiteral().getString();
+        } else {
+            return object.toString();
+        }
     }
 
     /**
@@ -155,6 +161,20 @@ public class MapperUtils {
     }
 
     public static void addOptionalUriProperty(Resource resource, Property property, String value) {
+        if (value != null && !value.isBlank()) {
+            resource.addProperty(property, ResourceFactory.createResource(value));
+        }
+    }
+
+    /**
+     * Update Uri property
+     * If string is empty|blank value is removed
+     * @param resource Resource
+     * @param property Property
+     * @param value Value
+     */
+    public static void updateUriProperty(Resource resource, Property property, String value) {
+        resource.removeAll(property);
         if (value != null && !value.isBlank()) {
             resource.addProperty(property, ResourceFactory.createResource(value));
         }

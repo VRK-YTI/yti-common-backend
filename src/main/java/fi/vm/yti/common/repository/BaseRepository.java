@@ -158,10 +158,9 @@ public abstract class BaseRepository {
                 .addWhere("?s", "?p", "?o")
                 .setLimit(1)
                 .build();
-        try {
-            return this.queryAsk(query);
-        } catch (Exception e) {
-            return false;
-        }
+        this.queryAsk(query); // may return true or false, depending on if there is any data
+
+        // If the queryAsk method does not throw an exception, the connection is healthy
+        return true;
     }
 }

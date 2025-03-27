@@ -152,4 +152,15 @@ public abstract class BaseRepository {
     public void queryUpdate(UpdateRequest query) {
         update.update(query);
     }
+
+    public boolean isHealthy() {
+        var query = new AskBuilder()
+                .addWhere("?s", "?p", "?o")
+                .setLimit(1)
+                .build();
+        this.queryAsk(query); // may return true or false, depending on if there is any data
+
+        // If the queryAsk method does not throw an exception, the connection is healthy
+        return true;
+    }
 }

@@ -152,4 +152,16 @@ public abstract class BaseRepository {
     public void queryUpdate(UpdateRequest query) {
         update.update(query);
     }
+
+    public boolean isHealthy() {
+        var query = new AskBuilder()
+                .addWhere("?s", "?p", "?o")
+                .setLimit(1)
+                .build();
+        try {
+            return this.queryAsk(query);
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }

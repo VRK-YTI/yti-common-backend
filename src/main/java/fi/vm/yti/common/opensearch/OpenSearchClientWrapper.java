@@ -6,6 +6,7 @@ import fi.vm.yti.common.util.CommonUtils;
 import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.opensearch._types.OpenSearchException;
 import org.opensearch.client.opensearch._types.Refresh;
+import org.opensearch.client.opensearch._types.HealthStatus;
 import org.opensearch.client.opensearch._types.analysis.*;
 import org.opensearch.client.opensearch._types.mapping.TypeMapping;
 import org.opensearch.client.opensearch._types.query_dsl.Query;
@@ -39,6 +40,21 @@ public class OpenSearchClientWrapper {
     @Autowired
     public OpenSearchClientWrapper(final OpenSearchClient client) {
         this.client = client;
+    }
+
+    /**
+     * Check if the OpenSearch cluster is healthy.
+     *
+     * @return true if the cluster is healthy, false otherwise
+     */
+    public boolean isHealthy() {
+        try {
+            var response = client.cluster().health();
+            return response.status() != HealthStatus.Red;
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
     }
 
     public boolean indexExists(String index) throws IOException {
@@ -282,5 +298,4 @@ public class OpenSearchClientWrapper {
             throw new OpenSearchExceptionWrapper(e.getMessage(), String.join(", ", request.index()));
         }
     }
-
 }

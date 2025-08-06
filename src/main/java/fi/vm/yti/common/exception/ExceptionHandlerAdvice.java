@@ -86,7 +86,7 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
         return buildResponseEntity(apiError);
     }
 
-    public ResponseEntity<Object> buildResponseEntity(ApiError apiError) {
+    protected ResponseEntity<Object> buildResponseEntity(ApiError apiError) {
         return new ResponseEntity<>(apiError, apiError.getStatus());
     }
 }

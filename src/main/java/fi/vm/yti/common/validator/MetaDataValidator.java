@@ -49,12 +49,12 @@ public abstract class MetaDataValidator<R extends BaseRepository> extends BaseVa
             addConstraintViolation(context, ValidationConstants.MSG_NOT_ALLOWED_UPDATE, propertyName);
         } else if (!update && (value == null || value.isBlank())) {
             addConstraintViolation(context, ValidationConstants.MSG_VALUE_MISSING, propertyName);
-        } else if (value != null && !value.matches(ValidationConstants.PREFIX_REGEX)) {
-            addConstraintViolation(context, ValidationConstants.MSG_VALUE_INVALID, propertyName);
         } else if (value != null && (
                 value.length() < ValidationConstants.PREFIX_MIN_LENGTH
-                || value.length() > ValidationConstants.PREFIX_MAX_LENGTH)) {
+                        || value.length() > ValidationConstants.PREFIX_MAX_LENGTH)) {
             addConstraintViolation(context, propertyName + "-character-count-mismatch", propertyName);
+        } else if (value != null && !value.matches(ValidationConstants.PREFIX_REGEX)) {
+            addConstraintViolation(context, ValidationConstants.MSG_VALUE_INVALID, propertyName);
         } else {
             validPrefix = true;
         }

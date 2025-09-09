@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.util.Map;
+
 import static org.springframework.http.HttpStatus.*;
 
 public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
@@ -66,7 +68,7 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(MappingError.class)
-    protected  ResponseEntity<Object> handleMappingError(MappingError error){
+    protected ResponseEntity<Object> handleMappingError(MappingError error){
         var apiError = new ApiError(BAD_REQUEST);
         apiError.setMessage(error.getMessage());
         return ResponseEntity.badRequest().body(apiError);
@@ -75,6 +77,7 @@ public class ExceptionHandlerAdvice extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     protected ResponseEntity<Object> handleNotFoundException(ResourceNotFoundException ex) {
         var apiError = new ApiError(NOT_FOUND);
+        apiError.setMessageParameters(Map.of("uri", ex.getUri()));
         apiError.setMessage(ex.getMessage());
         return buildResponseEntity(apiError);
     }

@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ApiError {
 
@@ -13,6 +15,8 @@ public class ApiError {
     private LocalDateTime timestamp;
 
     private String message;
+
+    private Map<String, String> messageParameters = new HashMap<>();
 
     private ApiError() {
         this.timestamp = LocalDateTime.now();
@@ -45,5 +49,13 @@ public class ApiError {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public void setMessageParameters(Map<String, String> messageParameters) {
+        this.messageParameters = messageParameters;
+    }
+
+    public Map<String, String> getMessageParameters() {
+        return messageParameters;
     }
 }

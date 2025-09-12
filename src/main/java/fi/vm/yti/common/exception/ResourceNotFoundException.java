@@ -2,7 +2,14 @@ package fi.vm.yti.common.exception;
 
 public class ResourceNotFoundException extends RuntimeException {
 
-    public ResourceNotFoundException(String prefix) {
-        super("Resource not found: " + prefix);
+    private final String uri;
+
+    public ResourceNotFoundException(String uri) {
+        super("resource-not-found");
+        this.uri = uri;
+    }
+
+    public String getUri() {
+        return uri;
     }
 }

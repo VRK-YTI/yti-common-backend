@@ -8,11 +8,14 @@ import fi.vm.yti.common.repository.CommonRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 import static fi.vm.yti.common.Constants.DEFAULT_LANGUAGE;
 
 @Service
 public class FrontendService {
+
+    Logger logger = Logger.getLogger(FrontendService.class.getName());
 
     private final CommonRepository coreRepository;
 
@@ -24,7 +27,14 @@ public class FrontendService {
         var organizations = coreRepository.getOrganizations();
         var dtos = OrganizationMapper.mapToListOrganizationDTO(organizations);
 
+        logger.info("Mapped organizations: " + dtos.size());
+        for (var dto : dtos) {
+            logger.info("Organization: " + dto.getId() + " Label: " + dto.getLabel());
+        }
+
         dtos.sort((a, b) -> {
+            logger.info("Comparing organizations: " + a.getId() + " and " + b.getId());
+
             var labelA = a.getLabel().getOrDefault(sortLanguage, a.getLabel().get(DEFAULT_LANGUAGE));
             var labelB = b.getLabel().getOrDefault(sortLanguage, b.getLabel().get(DEFAULT_LANGUAGE));
             return labelA.compareTo(labelB);

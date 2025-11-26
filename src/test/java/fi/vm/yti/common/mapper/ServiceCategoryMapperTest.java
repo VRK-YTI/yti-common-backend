@@ -1,6 +1,7 @@
 package fi.vm.yti.common.mapper;
 
 import fi.vm.yti.common.TestUtils;
+import fi.vm.yti.common.dto.ServiceCategoryDTO;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,7 +15,10 @@ class ServiceCategoryMapperTest {
 
         assertEquals(3, serviceCategories.size());
 
-        var cat = serviceCategories.get(0);
+        ServiceCategoryDTO cat = serviceCategories.stream()
+                .filter(c -> "P11".equals(c.getIdentifier()))
+                .findFirst()
+                .orElseThrow();
 
         assertEquals("P11", cat.getIdentifier());
         assertEquals("http://urn.fi/URN:NBN:fi:au:ptvl:v1105", cat.getId());

@@ -85,7 +85,7 @@ dependencies {
 
     implementation "com.google.guava:guava:33.0.0-jre"
 
-    implementation "fi.vm.yti:yti-spring-security:0.4.0"
+    implementation "fi.vm.yti:yti-spring-security:0.4.1-SNAPSHOT"
 
     compileOnly "org.jetbrains:annotations:23.0.0"
 

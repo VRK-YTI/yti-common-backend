@@ -186,25 +186,4 @@ public class QueryFactoryUtils {
                 })
         );
     }
-
-    public static Query wildcardLabelQuery (String query, String... fields) {
-        List<String> searchFields = fields.length == 0
-                ? List.of("label.*")
-                : Arrays.stream(fields).toList();
-
-        var trimmed = query.trim();
-        final var qs = trimmed.contains(" ")
-                ? Arrays.stream(trimmed.split("\\s+"))
-                .map(q -> String.format("*%s*", q))
-                .collect(Collectors.joining(" "))
-                : String.format("%s~1 *%s*", trimmed, trimmed);
-        return QueryStringQuery.of(q-> q
-                .query(qs)
-                .defaultOperator(trimmed.contains(" ")
-                        ? Operator.And
-                        : Operator.Or)
-                .fields(searchFields)
-        ).toQuery();
-    }
-
 }

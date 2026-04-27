@@ -36,6 +36,7 @@ public class OpenSearchClientWrapper {
     private Integer bulkMaxSize;
 
     private final OpenSearchClient client;
+    public static final int MAX_NGRAM_LENGTH = 9;
 
     @Autowired
     public OpenSearchClientWrapper(final OpenSearchClient client) {
@@ -87,8 +88,8 @@ public class OpenSearchClientWrapper {
                 .definition(new TokenizerDefinition.Builder()
                         .ngram(new NGramTokenizer.Builder()
                             .tokenChars(List.of(TokenChar.Letter, TokenChar.Digit))
-                            .maxGram(9)
-                            .minGram(3)
+                            .maxGram(MAX_NGRAM_LENGTH)
+                            .minGram(4)
                             .build())
                     .build())
                 .build();
@@ -97,7 +98,7 @@ public class OpenSearchClientWrapper {
                 .definition(new TokenizerDefinition.Builder()
                         .edgeNgram(new EdgeNGramTokenizer.Builder()
                                 .tokenChars(List.of(TokenChar.Letter, TokenChar.Digit))
-                                .maxGram(15)
+                                .maxGram(12)
                                 .minGram(3)
                                 .build())
                         .build())
@@ -133,7 +134,7 @@ public class OpenSearchClientWrapper {
                         .build())
                 .build();
 
-        // sort key gereration with trim and lowercase filters
+        // sort key generation with trim and lowercase filters
         var sortKeyNormalizer = new Normalizer.Builder()
                 .custom(new CustomNormalizer.Builder()
                     .filter("trim", "lowercase")

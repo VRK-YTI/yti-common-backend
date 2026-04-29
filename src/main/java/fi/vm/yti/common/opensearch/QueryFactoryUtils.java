@@ -162,7 +162,7 @@ public class QueryFactoryUtils {
                                     .multiMatch(m -> m
                                             .query(trimmed)
                                             .fields(ngramFields)
-                                            .operator(Operator.Or)
+                                            .operator(Operator.And)
                                     )
                             )
                             .minimumShouldMatch("1");

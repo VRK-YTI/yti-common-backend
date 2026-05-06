@@ -11,7 +11,10 @@ import org.opensearch.client.opensearch._types.query_dsl.*;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+
+import static fi.vm.yti.common.opensearch.OpenSearchClientWrapper.MAX_NGRAM_LENGTH;
 
 public class QueryFactoryUtils {
 
@@ -23,6 +26,23 @@ public class QueryFactoryUtils {
     public static final int DEFAULT_PAGE_SIZE = 10;
     public static final int INTERNAL_SEARCH_PAGE_SIZE = 10000;
     public static final String DEFAULT_SORT_LANG = "fi";
+    public static final Set<Character> WILDCARD_SPECIAL_CHARS = Set.of(
+            '*', '?', '\\',           // actual wildcard query special characters
+            '+', '-', '=', '/',       // arithmetic/regex
+            '&', '|', '!',            // logical operators
+            '(', ')', '{', '}', '[', ']',  // grouping characters
+            '^', '"', '~', ':', '<', '>' ); // boosting, phrases, ranges
+
+    public static String escapeWildcard(String value) {
+        var sb = new StringBuilder();
+        for (char c : value.toCharArray()) {
+            if (WILDCARD_SPECIAL_CHARS.contains(c)) {
+                sb.append('\\');
+            }
+            sb.append(c);
+        }
+        return sb.toString();
+    }
 
     public static int pageFrom(Integer pageFrom) {
         if (pageFrom == null || pageFrom <= 0) {
@@ -104,23 +124,66 @@ public class QueryFactoryUtils {
     }
 
     public static Query labelQuery(String query, String... fields) {
-        List<String> searchFields = fields.length == 0
+        List<String> baseFields = fields.length == 0
                 ? List.of("label.*")
                 : Arrays.stream(fields).toList();
 
-        var trimmed = query.trim();
-        final var qs = trimmed.contains(" ")
-                ? Arrays.stream(trimmed.split("\\s+"))
-                .map(q -> String.format("*%s*", q))
-                .collect(Collectors.joining(" "))
-                : String.format("%s~1 *%s*", trimmed, trimmed);
-        return QueryStringQuery.of(q-> q
-                .query(qs)
-                .defaultOperator(trimmed.contains(" ")
-                        ? Operator.And
-                        : Operator.Or)
-                .fields(searchFields)
-        ).toQuery();
-    }
+        List<String> edgeFields = baseFields.stream()
+                .map(f -> f + ".edge")
+                .toList();
 
+        List<String> ngramFields = baseFields.stream()
+                .map(f -> f + ".ngram")
+                .toList();
+
+
+        var trimmed = query.trim();
+        boolean needsWildcard = trimmed.length() > MAX_NGRAM_LENGTH;
+
+        return Query.of(q -> q
+                .bool(b -> {
+                    b.should(s -> s
+                                    .multiMatch(m -> m
+                                            .query(trimmed)
+                                            .fields(baseFields)
+                                            .operator(Operator.And)
+                                            .boost(3.0f)
+                                    )
+                            )
+                            .should(s -> s
+                                    .multiMatch(m -> m
+                                            .query(trimmed)
+                                            .fields(edgeFields)
+                                            .operator(Operator.And)
+                                            .boost(2.0f)
+                                    )
+                            )
+                            .should(s -> s
+                                    .multiMatch(m -> m
+                                            .query(trimmed)
+                                            .fields(ngramFields)
+                                            .operator(Operator.And)
+                                    )
+                            )
+                            .minimumShouldMatch("1");
+
+                    if (needsWildcard) {
+                        var words = trimmed.split("\\s+");
+                        var wildcardQuery = Arrays.stream(words)
+                                .map(word -> "*" + escapeWildcard(word.toLowerCase()) + "*")
+                                .collect(Collectors.joining(" "));
+
+                        b.should(s -> s
+                                .queryString(qs -> qs
+                                        .query(wildcardQuery)
+                                        .fields(baseFields)
+                                        .defaultOperator(Operator.And)
+                                )
+                        );
+                    }
+
+                    return b;
+                })
+        );
+    }
 }

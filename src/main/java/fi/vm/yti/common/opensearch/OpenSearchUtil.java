@@ -94,12 +94,26 @@ public class OpenSearchUtil {
         return new Property.Builder()
                 .text(new TextProperty.Builder()
                         .analyzer(analyzer)
-                        .fields("sortKey",
+                        .fields(Map.of(
+                                "sortKey",
                                 new KeywordProperty.Builder()
                                         .normalizer("sortKeyNormalizer")
                                         .ignoreAbove(256)
                                         .build()
-                                        ._toProperty())
+                                        ._toProperty(),
+                                "edge",
+                                new TextProperty.Builder()
+                                        .analyzer("edgeNgramAnalyzer")
+                                        .searchAnalyzer("yti")
+                                        .build()
+                                        ._toProperty(),
+                                "ngram",
+                                new TextProperty.Builder()
+                                        .analyzer("ngramAnalyzer")
+                                        .searchAnalyzer("yti")
+                                        .build()
+                                        ._toProperty()
+                        ))
                         .build()
                 )
                 .build();

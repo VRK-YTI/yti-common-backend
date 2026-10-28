@@ -13,6 +13,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.LinkedHashSet;
+import java.util.ArrayList;
 
 import static fi.vm.yti.common.opensearch.OpenSearchClientWrapper.MAX_NGRAM_LENGTH;
 
@@ -86,6 +88,19 @@ public class QueryFactoryUtils {
                 .unmappedType(FieldType.Keyword)
                 .build();
         return SortOptions.of(s -> s.field(builder));
+    }
+
+    public static List<SortOptions> getLangSortOptionsWithFallback(String sortLang, String tieBreakField) {
+        var langs = new LinkedHashSet<>(List.of(getSortLang(sortLang), DEFAULT_SORT_LANG, "en"));
+        var options = new ArrayList<SortOptions>();
+        for (var lang : langs) {
+            options.add(SortOptions.of(s -> s.field(f -> f
+                    .field("label." + lang + ".sortKey")
+                    .order(SortOrder.Asc)
+                    .unmappedType(FieldType.Keyword))));
+        }
+        options.add(SortOptions.of(s -> s.field(f -> f.field(tieBreakField).order(SortOrder.Asc))));
+        return options;
     }
 
     // COMMON QUERIES
